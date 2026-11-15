@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block content %}
+<p class="muted">Lesson: <b>{{ lesson.topic }}</b></p>
+<h1>Step 2: Check the prerequisites</h1>
+<p>The AI suggests students need these topics <i>before</i> your lesson. Untick any you disagree with and add your own.</p>
+<form method="post" class="card" data-ai>
+  {% for p in prereqs %}
+  <label class="check">
+    <input type="checkbox" name="prereq" value="{{ p.name }}" checked>
+    <span><b>{{ p.name }}</b><br><span class="muted">{{ p.why_needed }}</span></span>
+  </label>
+  {% endfor %}
+  <label>Add your own (one per line)
+    <textarea name="extra" rows="3"></textarea>
+  </label>
+  <div class="row">
+    <label>Quiz level
+      <select name="level">{% for lv in levels %}<option>{{ lv }}</option>{% endfor %}</select>
+    </label>
+    <label>Number of questions
+      <select name="n">{% for n in [4,6,8,10] %}<option {% if n==6 %}selected{% endif %}>{{ n }}</option>{% endfor %}</select>
+    </label>
+  </div>
+  <p class="hint"><b>Basic</b>: definitions and recognition · <b>Medium</b>: applying the idea · <b>Advanced</b>: new situations, multi-step reasoning</p>
+  <button type="submit">Create the readiness quiz</button>
+</form>
+{% endblock %}

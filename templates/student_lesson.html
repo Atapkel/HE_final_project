@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block content %}
+<p class="muted">Hello, {{ session.name }}</p>
+<h1>{{ lesson.topic }}</h1>
+{% for kind, title, desc in [('pre', 'Before the lesson: am I ready?', 'Checks what you need to know before class. You will get study notes for anything you miss.'),
+                             ('post', 'After the lesson: what did I learn?', 'Checks what you learned today.')] %}
+  {% set q = quizzes.get(kind) %}
+  {% if q and q.status != 'draft' %}
+  <div class="card">
+    <h2>{{ title }}</h2>
+    <p class="muted">{{ desc }} Level: {{ q.level }}</p>
+    {% if q.id in done %}
+      <a class="button ghost" href="{{ url_for('student_result', quiz_id=q.id) }}">See my results</a>
+    {% elif q.status == 'open' %}
+      <a class="button" href="{{ url_for('student_quiz', quiz_id=q.id) }}">Start</a>
+    {% else %}
+      <p>This quiz is closed.</p>
+    {% endif %}
+  </div>
+  {% endif %}
+{% endfor %}
+{% if not quizzes.get('pre') or quizzes['pre'].status == 'draft' %}{% if not quizzes.get('post') or quizzes['post'].status == 'draft' %}
+  <p>Your teacher has not opened a quiz yet. Refresh this page later.</p>
+{% endif %}{% endif %}
+{% endblock %}

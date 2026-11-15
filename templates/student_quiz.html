@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block content %}
+<p class="muted">{{ lesson.topic }} · {{ 'Before the lesson' if quiz.kind == 'pre' else 'After the lesson' }} · Level {{ quiz.level }}</p>
+<h1>Quiz</h1>
+<p class="hint">This is not graded. It helps you and your teacher see what to focus on. Answer honestly, without help.</p>
+<form method="post">
+  {% for q in questions %}
+  {% set qi = loop.index0 %}
+  <fieldset class="card">
+    <legend>{{ loop.index }}. {{ q.text }}</legend>
+    {% for o in q.options %}
+    <label class="option"><input type="radio" name="q{{ qi }}" value="{{ loop.index0 }}" required> {{ o }}</label>
+    {% endfor %}
+  </fieldset>
+  {% endfor %}
+  <button type="submit">Submit answers</button>
+</form>
+{% endblock %}

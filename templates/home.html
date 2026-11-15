@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Who are you?</h1>
+<div class="choices">
+  <a class="choice" href="{{ url_for('teacher_home') }}">
+    <strong>I am a teacher</strong>
+    <span>Plan today's lesson and see how students are doing</span>
+  </a>
+  <a class="choice" href="{{ url_for('student_join') }}">
+    <strong>I am a student</strong>
+    <span>Enter the lesson code from your teacher</span>
+  </a>
+</div>
+{% endblock %}

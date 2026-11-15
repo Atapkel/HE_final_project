@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Join your lesson</h1>
+<form method="post" class="card">
+  <label>Lesson code
+    <input name="code" value="{{ code }}" required autocomplete="off" class="big" placeholder="ABCDE" maxlength="5">
+  </label>
+  <label>Your name
+    <input name="name" required value="{{ session.get('name', '') }}">
+  </label>
+  <button type="submit">Continue</button>
+</form>
+{% endblock %}

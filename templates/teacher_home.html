@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>New lesson</h1>
+<form method="post" action="{{ url_for('teacher_new') }}" class="card" data-ai>
+  <label>What will you teach today?
+    <input name="topic" required placeholder="e.g. Integration by parts">
+  </label>
+  <label>Course (optional)
+    <input name="course" placeholder="e.g. Calculus II, 1st year">
+  </label>
+  <label>Language of the quizzes
+    <select name="language">{% for l in languages %}<option>{{ l }}</option>{% endfor %}</select>
+  </label>
+  <button type="submit">Find prerequisite topics</button>
+  <p class="hint">Step 1 of 3. The AI will suggest what students should already know. You will check its list next.</p>
+</form>
+
+{% if lessons %}
+<h2>My lessons</h2>
+<ul class="list">
+  {% for l in lessons %}
+  <li><a href="{{ url_for('teacher_lesson', lesson_id=l.id) }}">{{ l.topic }}</a>
+      <span class="muted">{{ l.course }} · code <b>{{ l.code }}</b></span></li>
+  {% endfor %}
+</ul>
+{% endif %}
+{% endblock %}
