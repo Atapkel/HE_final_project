@@ -1,0 +1,8 @@
+<div class="form-row">
+  <label>Quiz level
+    <select name="level">{% for lv in levels %}<option>{{ lv }}</option>{% endfor %}</select>
+  </label>
+  <label>Number of questions
+    <select name="n">{% for n in [4,6,8,10] %}<option{% if n == 6 %} selected{% endif %}>{{ n }}</option>{% endfor %}</select>
+  </label>
+</div>

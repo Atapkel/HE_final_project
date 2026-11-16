@@ -1,35 +1,53 @@
 {% extends "base.html" %}
+{% block title %}Review quiz | Lesson Ready{% endblock %}
+{% block layout %}reading-shell{% endblock %}
 {% block content %}
-<p class="muted">Lesson: <b>{{ lesson.topic }}</b></p>
-<h1>Step 3: Review the {{ 'readiness quiz (before the lesson)' if quiz.kind == 'pre' else 'learning check (after the lesson)' }}</h1>
-<p>Level: <span class="pill">{{ quiz.level }}</span> · Written by AI. <b>Students see nothing until you publish.</b>
-Untick any question that is wrong or unclear.</p>
-<form method="post">
+<a class="back-link" href="{{ url_for('teacher_lesson', lesson_id=lesson.id) }}">← Lesson overview</a>
+<div class="page-heading">
+  <p class="context">{{ lesson.topic }} · {{ quiz.level }}</p>
+  <h1>Review the {{ 'readiness quiz' if quiz.kind == 'pre' else 'learning check' }}</h1>
+  <p>Check the AI’s answers and explanations. Uncheck any question you want to leave out before publishing.</p>
+</div>
+
+<form method="post" class="stack">
   {% for q in questions %}
-  <div class="card q">
-    <label class="check"><input type="checkbox" name="keep" value="{{ loop.index0 }}" checked>
-      <span><b>{{ loop.index }}. {{ q.text }}</b> <span class="pill small">{{ q.prerequisite }}</span></span></label>
-    <ol type="A">
-      {% for o in q.options %}<li class="{{ 'correct' if loop.index0 == q.correct_index }}">{{ o }}</li>{% endfor %}
+  <article class="card question">
+    <label class="review-question">
+      <input type="checkbox" name="keep" value="{{ loop.index0 }}" checked>
+      <span>
+        <span class="context">Question {{ loop.index }} · {{ q.prerequisite }}</span>
+        <strong>{{ q.text }}</strong>
+      </span>
+    </label>
+    <ol type="A" class="review-options">
+      {% for option in q.options %}
+        <li{% if loop.index0 == q.correct_index %} class="correct"{% endif %}>
+          {{ option }}{% if loop.index0 == q.correct_index %} <span class="option-status">Correct</span>{% endif %}
+        </li>
+      {% endfor %}
     </ol>
-    <p class="muted">Explanation: {{ q.explanation }}</p>
-  </div>
+    <p class="explanation">{{ q.explanation }}</p>
+  </article>
   {% endfor %}
 
   {% if resources %}
-  <h2>Study notes students get for topics they miss</h2>
-  {% for r in resources %}
-  <div class="card"><b>{{ r.prerequisite }}</b><p>{{ r.summary }}</p>
-    <p class="muted">Search links for: “{{ r.search_query }}”</p></div>
-  {% endfor %}
+  <section class="stack section-break" aria-labelledby="review-notes">
+    <h2 id="review-notes">Study notes</h2>
+    <p class="muted">Students see these notes for topics they miss.</p>
+    {% for r in resources %}
+    <article class="card">
+      <h3>{{ r.prerequisite }}</h3>
+      <p>{{ r.summary }}</p>
+      <p class="hint">Search query: “{{ r.search_query }}”</p>
+    </article>
+    {% endfor %}
+  </section>
   {% endif %}
 
-  <div class="row">
+  <div class="actions">
     <button type="submit">Publish to students</button>
     {% if quiz.kind == 'pre' %}
       <a class="button ghost" href="{{ url_for('teacher_prereqs', lesson_id=lesson.id) }}">Start again</a>
-    {% else %}
-      <a class="button ghost" href="{{ url_for('teacher_lesson', lesson_id=lesson.id) }}">Back</a>
     {% endif %}
   </div>
 </form>

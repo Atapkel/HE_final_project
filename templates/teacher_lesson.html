@@ -1,74 +1,100 @@
 {% extends "base.html" %}
-{% block content %}
-<h1>{{ lesson.topic }}</h1>
-<p class="muted">{{ lesson.course }}</p>
+{% block title %}{{ lesson.topic }} | Lesson Ready{% endblock %}
 
-<div class="card code-card">
-  Students go to <b>{{ join_url }}</b> and type the code
-  <div class="code">{{ lesson.code }}</div>
+{% macro quiz_controls(quiz) %}
+<div class="quiz-controls">
+  <span class="muted">{{ quiz.level }}</span>
+  <span class="status{% if quiz.status == 'open' %} status-open{% endif %}">{{ 'Open for students' if quiz.status == 'open' else 'Closed' }}</span>
+  <form method="post" action="{{ url_for('teacher_quiz_status', quiz_id=quiz.id) }}">
+    <button class="ghost compact" type="submit">{{ 'Close quiz' if quiz.status == 'open' else 'Open again' }}</button>
+  </form>
 </div>
-<p><a class="button ghost" href="">Refresh results</a></p>
+{% endmacro %}
 
-{# ---------- Before the lesson ---------- #}
-<section class="card">
-  <h2>1. Before the lesson: readiness quiz</h2>
-  {% set pre = quizzes.get('pre') %}
-  {% if not pre %}
-    <p>Not created yet. <a href="{{ url_for('teacher_prereqs', lesson_id=lesson.id) }}">Create it</a></p>
-  {% elif pre.status == 'draft' %}
-    <p>Draft waiting for your review. <a href="{{ url_for('teacher_review', quiz_id=pre.id) }}">Review and publish</a></p>
-  {% else %}
-    <p>Level <span class="pill">{{ pre.level }}</span>
-       Status: <b>{{ 'open for students' if pre.status == 'open' else 'closed' }}</b></p>
-    <form method="post" action="{{ url_for('teacher_quiz_status', quiz_id=pre.id) }}">
-      <button class="ghost" type="submit">{{ 'Close quiz' if pre.status == 'open' else 'Open again' }}</button>
-    </form>
-    {% with s = stats['pre'], label_topic = 'How ready are students? (by prerequisite)' %}{% include "_stats.html" %}{% endwith %}
-    {% if stats['pre'].count %}<p class="hint">Topics marked “needs attention” are worth a short recap at the start of the lesson.</p>{% endif %}
-  {% endif %}
-</section>
+{% block content %}
+<a class="back-link" href="{{ url_for('teacher_home') }}">← Teacher workspace</a>
+<div class="page-heading">
+  {% if lesson.course %}<p class="context">{{ lesson.course }}</p>{% endif %}
+  <h1>{{ lesson.topic }}</h1>
+</div>
 
-{# ---------- After the lesson ---------- #}
-<section class="card">
-  <h2>2. After the lesson: learning check</h2>
-  {% set post = quizzes.get('post') %}
-  {% if post and post.status != 'draft' %}
-    <p>Level <span class="pill">{{ post.level }}</span>
-       Status: <b>{{ 'open for students' if post.status == 'open' else 'closed' }}</b></p>
-    <form method="post" action="{{ url_for('teacher_quiz_status', quiz_id=post.id) }}">
-      <button class="ghost" type="submit">{{ 'Close quiz' if post.status == 'open' else 'Open again' }}</button>
-    </form>
-    {% with s = stats['post'], label_topic = 'What did students learn? (by sub-topic)' %}{% include "_stats.html" %}{% endwith %}
-  {% else %}
-    {% if post %}<p>A draft exists. <a href="{{ url_for('teacher_review', quiz_id=post.id) }}">Review and publish it</a>, or create a new one:</p>{% endif %}
-    <form method="post" action="{{ url_for('teacher_post_quiz', lesson_id=lesson.id) }}" data-ai>
-      <label>What did you actually cover? (optional, helps the AI)
-        <textarea name="notes" rows="3" placeholder="e.g. We did the formula, two worked examples, and choosing u and dv."></textarea>
-      </label>
-      <div class="row">
-        <label>Quiz level
-          <select name="level">{% for lv in levels %}<option>{{ lv }}</option>{% endfor %}</select>
-        </label>
-        <label>Number of questions
-          <select name="n">{% for n in [4,6,8,10] %}<option {% if n==6 %}selected{% endif %}>{{ n }}</option>{% endfor %}</select>
-        </label>
+<div class="stack">
+  <section class="card invite">
+    <div>
+      <h2>Invite students</h2>
+      <p>Share the code and this link with your class: <a href="{{ url_for('student_join', code=lesson.code) }}">{{ join_url }}</a></p>
+    </div>
+    <code class="lesson-code">{{ lesson.code }}</code>
+  </section>
+
+  <div class="split-heading dashboard-heading">
+    <h2>Quizzes</h2>
+    <a class="button ghost compact" href="{{ url_for('teacher_lesson', lesson_id=lesson.id) }}">Refresh results</a>
+  </div>
+
+  <section class="card dashboard-quiz">
+    <p class="context">Before class</p>
+    <h3>Readiness quiz</h3>
+    {% set pre = quizzes.get('pre') %}
+    {% if not pre %}
+      <p class="muted">Check how well students know the topics they’ll need in class.</p>
+      <div class="actions">
+        <a class="button" href="{{ url_for('teacher_prereqs', lesson_id=lesson.id) }}">Create readiness quiz</a>
       </div>
-      <button type="submit">Create the learning check</button>
-    </form>
-  {% endif %}
-</section>
+    {% elif pre.status == 'draft' %}
+      <p class="muted">Your draft is ready to review.</p>
+      <div class="actions">
+        <a class="button" href="{{ url_for('teacher_review', quiz_id=pre.id) }}">Review and publish</a>
+      </div>
+    {% else %}
+      {{ quiz_controls(pre) }}
+      {% with s = stats['pre'], label_topic = 'Readiness by topic' %}{% include "_stats.html" %}{% endwith %}
+      {% if stats['pre'].count %}<p class="hint recap">Consider recapping topics marked “Needs attention” at the start of class.</p>{% endif %}
+    {% endif %}
+  </section>
 
-{% if progress %}
-<section class="card">
-  <h2>Progress: before vs after</h2>
-  <table>
-    <tr><th>Student</th><th>Readiness</th><th>After lesson</th><th>Change</th></tr>
-    {% for p in progress %}
-    <tr><td>{{ p.name }}</td><td>{{ p.pre }}%</td><td>{{ p.post }}%</td>
-        <td class="{{ 'up' if p.post >= p.pre else 'down' }}">{{ '%+d' % (p.post - p.pre) }}</td></tr>
-    {% endfor %}
-  </table>
-  <p class="hint">The two quizzes test different things (prerequisites vs lesson content), so read this as a rough signal, not a precise gain.</p>
-</section>
-{% endif %}
+  <section class="card dashboard-quiz">
+    <p class="context">After class</p>
+    <h3>Learning check</h3>
+    {% set post = quizzes.get('post') %}
+    {% if post and post.status != 'draft' %}
+      {{ quiz_controls(post) }}
+      {% with s = stats['post'], label_topic = 'Results by topic' %}{% include "_stats.html" %}{% endwith %}
+    {% else %}
+      {% if post %}
+      <p class="muted"><a href="{{ url_for('teacher_review', quiz_id=post.id) }}">Review the current draft</a> or generate a new one below.</p>
+      {% endif %}
+      <form method="post" action="{{ url_for('teacher_post_quiz', lesson_id=lesson.id) }}" class="form-stack lesson-form" data-ai>
+        <label>What did you cover? <span class="optional">Optional</span>
+          <textarea name="notes" rows="3" placeholder="e.g. The formula, two worked examples, and how to choose u and dv"></textarea>
+        </label>
+        {% include "_quiz_settings.html" %}
+        <div class="actions">
+          <button type="submit">Create learning check</button>
+        </div>
+        <p class="hint ai-status" role="status"></p>
+      </form>
+    {% endif %}
+  </section>
+
+  {% if progress %}
+  <section class="card">
+    <h2>Before and after</h2>
+    <p class="muted">The quizzes cover different material. Compare the scores as a rough guide.</p>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th scope="col">Student</th><th scope="col">Readiness</th><th scope="col">After class</th><th scope="col">Change (pp)</th></tr>
+        </thead>
+        <tbody>
+        {% for p in progress %}
+          <tr><th scope="row">{{ p.name }}</th><td>{{ p.pre }}%</td><td>{{ p.post }}%</td>
+              <td class="{{ 'up' if p.post >= p.pre else 'down' }}">{{ '%+d' % (p.post - p.pre) }}</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+  {% endif %}
+</div>
 {% endblock %}

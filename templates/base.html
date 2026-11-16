@@ -7,22 +7,46 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-  <header class="top">
-    <a href="{{ url_for('home') }}" class="brand">Lesson Ready</a>
-    <span class="tag">AI suggests · teacher decides</span>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="{{ url_for('home') }}" class="brand">
+        <span class="brand-mark" aria-hidden="true"></span>
+        Lesson Ready
+      </a>
+      <nav aria-label="Main navigation">
+        {% set page = request.endpoint or '' %}
+        <a href="{{ url_for('teacher_home') }}"{% if page.startswith('teacher_') %} aria-current="{{ 'page' if page == 'teacher_home' else 'true' }}"{% endif %}>Teacher</a>
+        <a href="{{ url_for('student_join') }}"{% if page.startswith('student_') %} aria-current="{{ 'page' if page == 'student_join' else 'true' }}"{% endif %}>Student</a>
+      </nav>
+    </div>
   </header>
-  <main>
-    {% with msgs = get_flashed_messages() %}
-      {% for m in msgs %}<div class="flash">{{ m }}</div>{% endfor %}
-    {% endwith %}
+
+  <main id="main" class="shell {% block layout %}{% endblock %}" tabindex="-1">
+    {% for message in get_flashed_messages() %}
+      <div class="flash" role="status">{{ message }}</div>
+    {% endfor %}
     {% block content %}{% endblock %}
   </main>
+
   <script>
-    // Show a "please wait" message while the AI is working.
-    document.querySelectorAll('form[data-ai]').forEach(f => f.addEventListener('submit', () => {
-      const b = f.querySelector('button[type=submit]');
-      if (b) { b.disabled = true; b.textContent = 'AI is working… (up to a minute)'; }
-    }));
+    document.querySelectorAll('form[data-ai]').forEach(form => {
+      const button = form.querySelector('button[type=submit]');
+      const status = form.querySelector('[role=status]');
+      const label = button.textContent;
+
+      form.addEventListener('submit', () => {
+        button.disabled = true;
+        button.textContent = 'Generating…';
+        status.textContent = 'AI is working. This may take up to a minute.';
+      });
+
+      window.addEventListener('pageshow', () => {
+        button.disabled = false;
+        button.textContent = label;
+        status.textContent = '';
+      });
+    });
   </script>
 </body>
 </html>

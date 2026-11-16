@@ -1,14 +1,30 @@
 {% extends "base.html" %}
+{% block layout %}home-shell{% endblock %}
 {% block content %}
-<h1>Who are you?</h1>
+<section class="hero">
+  <div class="hero-copy">
+    <h1>Ready for<br> the lesson.</h1>
+    <p>Check what students know before class, help them fill the gaps, and see what they learned afterwards.</p>
+  </div>
+  <div class="hero-image">
+    <img src="{{ url_for('static', filename='lesson-notebook.jpg') }}" alt="" width="900" height="600">
+  </div>
+</section>
+
 <div class="choices">
   <a class="choice" href="{{ url_for('teacher_home') }}">
-    <strong>I am a teacher</strong>
-    <span>Plan today's lesson and see how students are doing</span>
+    <div>
+      <h2>I'm a teacher</h2>
+      <p>Prepare a lesson, review AI suggestions, and see class results.</p>
+    </div>
+    <span class="choice-arrow" aria-hidden="true">↗</span>
   </a>
   <a class="choice" href="{{ url_for('student_join') }}">
-    <strong>I am a student</strong>
-    <span>Enter the lesson code from your teacher</span>
+    <div>
+      <h2>I'm a student</h2>
+      <p>Join with a lesson code, take a quiz, and see what to review.</p>
+    </div>
+    <span class="choice-arrow" aria-hidden="true">↗</span>
   </a>
 </div>
 {% endblock %}

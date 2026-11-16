@@ -1,13 +1,18 @@
 {% extends "base.html" %}
+{% block title %}Join a lesson | Lesson Ready{% endblock %}
+{% block layout %}join-shell{% endblock %}
 {% block content %}
-<h1>Join your lesson</h1>
-<form method="post" class="card">
+<div class="page-heading">
+  <h1>Join a lesson</h1>
+  <p>Use the five-character code from your teacher.</p>
+</div>
+<form method="post" class="card form-stack join-form">
   <label>Lesson code
-    <input name="code" value="{{ code }}" required autocomplete="off" class="big" placeholder="ABCDE" maxlength="5">
+    <input name="code" value="{{ code }}" required autocomplete="off" autocapitalize="characters" spellcheck="false" class="code-input" placeholder="ABCDE" maxlength="5">
   </label>
   <label>Your name
-    <input name="name" required value="{{ session.get('name', '') }}">
+    <input name="name" required autocomplete="name" value="{{ session.get('name', '') }}" placeholder="Enter your name">
   </label>
-  <button type="submit">Continue</button>
+  <button type="submit">Join lesson <span aria-hidden="true">→</span></button>
 </form>
 {% endblock %}

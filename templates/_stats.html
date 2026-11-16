@@ -1,31 +1,53 @@
-{# expects: s (stats dict), label_topic #}
 {% if s.count == 0 %}
-  <p class="muted">No students have finished yet. Press “Refresh” after they submit.</p>
+  <p class="empty">No submissions yet. Refresh results after students finish.</p>
 {% else %}
-  <div class="kpis">
-    <div><span>{{ s.count }}</span>students finished</div>
-    <div><span>{{ s.avg }}%</span>average score</div>
-  </div>
-  <h3>{{ label_topic }}</h3>
-  {% for t in s.topics %}
-  <div class="bar-row">
-    <div class="bar-label">{{ t.name }}{% if t.pct < 60 %} <span class="warn">needs attention</span>{% endif %}</div>
-    <div class="bar"><div style="width: {{ t.pct }}%" class="{{ 'low' if t.pct < 60 }}"></div></div>
-    <div class="bar-num">{{ t.pct }}%</div>
-  </div>
-  {% endfor %}
-  <details><summary>Each question</summary>
-    <table>
-      <tr><th>#</th><th>Question</th><th>Correct</th><th>Most common wrong answer</th></tr>
-      {% for q in s.questions %}
-      <tr><td>{{ loop.index }}</td><td>{{ q.text }}</td><td>{{ q.pct }}%</td><td>{{ q.common_wrong or '—' }}</td></tr>
-      {% endfor %}
-    </table>
+  <dl class="stats-summary">
+    <div><dt>Students finished</dt><dd>{{ s.count }}</dd></div>
+    <div><dt>Average score</dt><dd>{{ s.avg }}%</dd></div>
+  </dl>
+
+  <h4>{{ label_topic }}</h4>
+  <ul class="topic-stats">
+    {% for topic in s.topics %}
+    <li>
+      <div class="split-heading">
+        <span>{{ topic.name }}</span>
+        <strong>{{ topic.pct }}%</strong>
+      </div>
+      <div class="bar{% if topic.pct < 60 %} bar-low{% endif %}" aria-hidden="true"><span style="width: {{ topic.pct }}%"></span></div>
+      {% if topic.pct < 60 %}<small class="warn">Needs attention</small>{% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+
+  <details>
+    <summary>Results by question</summary>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th scope="col">#</th><th scope="col">Question</th><th scope="col">Correct</th><th scope="col">Most common wrong answer</th></tr>
+        </thead>
+        <tbody>
+        {% for q in s.questions %}
+          <tr><td>{{ loop.index }}</td><td>{{ q.text }}</td><td>{{ q.pct }}%</td><td>{{ q.common_wrong or '—' }}</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
   </details>
-  <details><summary>Each student</summary>
-    <table>
-      <tr><th>Name</th><th>Score</th></tr>
-      {% for a in s.students %}<tr><td>{{ a.student_name }}</td><td>{{ a.score }} / {{ a.total }}</td></tr>{% endfor %}
-    </table>
+  <details>
+    <summary>Results by student</summary>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th scope="col">Name</th><th scope="col">Score</th></tr>
+        </thead>
+        <tbody>
+        {% for a in s.students %}
+          <tr><th scope="row">{{ a.student_name }}</th><td>{{ a.score }} / {{ a.total }}</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
   </details>
 {% endif %}

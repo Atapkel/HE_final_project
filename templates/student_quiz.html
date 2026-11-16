@@ -1,18 +1,32 @@
 {% extends "base.html" %}
+{% block title %}Take the quiz | Lesson Ready{% endblock %}
+{% block layout %}reading-shell{% endblock %}
 {% block content %}
-<p class="muted">{{ lesson.topic }} · {{ 'Before the lesson' if quiz.kind == 'pre' else 'After the lesson' }} · Level {{ quiz.level }}</p>
-<h1>Quiz</h1>
-<p class="hint">This is not graded. It helps you and your teacher see what to focus on. Answer honestly, without help.</p>
-<form method="post">
+<a class="back-link" href="{{ url_for('student_lesson', code=lesson.code) }}">← Back to the lesson</a>
+<div class="page-heading">
+  <p class="context">{{ lesson.topic }} · {{ quiz.level }}</p>
+  <h1>{{ 'Readiness quiz' if quiz.kind == 'pre' else 'Learning check' }}</h1>
+  <p>Choose one answer per question and work on your own. This practice quiz helps you decide what to review.</p>
+</div>
+
+{% set content_language = {'English': 'en', 'Russian': 'ru', 'Kazakh': 'kk'}.get(lesson.language, 'en') %}
+<form method="post" class="stack">
   {% for q in questions %}
   {% set qi = loop.index0 %}
-  <fieldset class="card">
-    <legend>{{ loop.index }}. {{ q.text }}</legend>
-    {% for o in q.options %}
-    <label class="option"><input type="radio" name="q{{ qi }}" value="{{ loop.index0 }}" required> {{ o }}</label>
-    {% endfor %}
+  <fieldset class="card question">
+    <legend><span class="question-count">Question {{ loop.index }} of {{ questions|length }}</span> <span lang="{{ content_language }}">{{ q.text }}</span></legend>
+    <div class="option-group" lang="{{ content_language }}">
+      {% for option in q.options %}
+      <label class="option">
+        <input type="radio" name="q{{ qi }}" value="{{ loop.index0 }}" required>
+        <span>{{ option }}</span>
+      </label>
+      {% endfor %}
+    </div>
   </fieldset>
   {% endfor %}
-  <button type="submit">Submit answers</button>
+  <div class="actions">
+    <button type="submit">Submit answers <span aria-hidden="true">→</span></button>
+  </div>
 </form>
 {% endblock %}

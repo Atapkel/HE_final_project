@@ -1,25 +1,44 @@
 {% extends "base.html" %}
+{% block title %}{{ lesson.topic }} | Lesson Ready{% endblock %}
+{% block layout %}reading-shell{% endblock %}
 {% block content %}
-<p class="muted">Hello, {{ session.name }}</p>
-<h1>{{ lesson.topic }}</h1>
-{% for kind, title, desc in [('pre', 'Before the lesson: am I ready?', 'Checks what you need to know before class. You will get study notes for anything you miss.'),
-                             ('post', 'After the lesson: what did I learn?', 'Checks what you learned today.')] %}
+<a class="back-link" href="{{ url_for('student_join') }}">← Join another lesson</a>
+<div class="page-heading">
+  {% if lesson.course %}<p class="context">{{ lesson.course }}</p>{% endif %}
+  <h1>{{ lesson.topic }}</h1>
+  <p>Welcome, {{ session.name }}.</p>
+</div>
+
+<div class="stack">
+{% for kind, phase, title, description in [
+  ('pre', 'Before class', 'Readiness quiz', 'Check what you already know and get study notes for topics you miss.'),
+  ('post', 'After class', 'Learning check', 'Check what you learned during the lesson.')
+] %}
   {% set q = quizzes.get(kind) %}
   {% if q and q.status != 'draft' %}
-  <div class="card">
+  <section class="card">
+    <p class="context">{{ phase }} · {{ q.level }}</p>
     <h2>{{ title }}</h2>
-    <p class="muted">{{ desc }} Level: {{ q.level }}</p>
-    {% if q.id in done %}
-      <a class="button ghost" href="{{ url_for('student_result', quiz_id=q.id) }}">See my results</a>
-    {% elif q.status == 'open' %}
-      <a class="button" href="{{ url_for('student_quiz', quiz_id=q.id) }}">Start</a>
-    {% else %}
-      <p>This quiz is closed.</p>
-    {% endif %}
-  </div>
+    <p class="muted">{{ description }}</p>
+    <div class="actions">
+      {% if q.id in done %}
+        <a class="button ghost" href="{{ url_for('student_result', quiz_id=q.id) }}">See my results</a>
+      {% elif q.status == 'open' %}
+        <a class="button" href="{{ url_for('student_quiz', quiz_id=q.id) }}">Start quiz <span aria-hidden="true">→</span></a>
+      {% else %}
+        <span class="status">Quiz closed</span>
+      {% endif %}
+    </div>
+  </section>
   {% endif %}
 {% endfor %}
-{% if not quizzes.get('pre') or quizzes['pre'].status == 'draft' %}{% if not quizzes.get('post') or quizzes['post'].status == 'draft' %}
-  <p>Your teacher has not opened a quiz yet. Refresh this page later.</p>
-{% endif %}{% endif %}
+
+{% if (not quizzes.get('pre') or quizzes['pre'].status == 'draft') and
+      (not quizzes.get('post') or quizzes['post'].status == 'draft') %}
+  <section class="card">
+    <h2>No quiz available yet</h2>
+    <p class="muted">Refresh this page after your teacher opens the quiz.</p>
+  </section>
+{% endif %}
+</div>
 {% endblock %}
