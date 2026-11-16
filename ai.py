@@ -81,9 +81,28 @@ class PostQuiz(BaseModel):
     questions: List[Question]
 
 
+class Misconception(BaseModel):
+    topic: str
+    question_refs: List[str]  # ids like "R3" or "L2" from the data we send; the app shows the exact numbers
+    what_students_think: str
+    why_it_happens: str
+    teaching_action: str
+
+
+class ClassInsight(BaseModel):
+    headline: str
+    summary: str
+    misconceptions: List[Misconception]
+    strengths: List[str]
+    next_steps: List[str]
+    note_to_students: str
+    data_caution: str
+
+
 # ---------- Helper ----------
 
 def _ask(prompt: str, schema: type[BaseModel]) -> BaseModel:
+    """One structured call to Claude; returns a validated pydantic object or raises AIError."""
     try:
         response = get_client().messages.parse(
             model=MODEL,
@@ -155,3 +174,33 @@ Rules:
 - "explanation": one or two sentences a student sees after answering.
 Write everything in {language}."""
     return _ask(prompt, PostQuiz).model_dump()
+
+
+def analyse_class(topic: str, course: str, language: str, data: str) -> dict:
+    """Read anonymous, aggregated class results and draft feedback for the teacher.
+
+    `data` contains only counts per question/answer option. No student names or ids are sent."""
+    prompt = f"""You help a university teacher understand class results for the lesson "{topic}"
+(course: {course or "not specified"}). Below are ANONYMOUS, aggregated results: for each question,
+how many students chose each option. "R" questions are the readiness quiz taken before class
+(they test prerequisites); "L" questions are the learning check taken after class.
+
+{data}
+
+Write a short, practical analysis for the teacher:
+- "headline": one sentence with the single most important finding.
+- "summary": 2-3 sentences on the overall picture (readiness, learning, change before vs after).
+- "misconceptions": up to 4, most important first. Only include a misconception when the data
+  shows it (a question below ~65% correct, or many students choosing the same wrong option).
+  For each: the topic; "question_refs" = the question ids that show it (e.g. ["R7","R8"]);
+  what students seem to believe, based on the wrong option they chose; a likely reason;
+  and one concrete teaching action for the next class (an example, a contrast, a quick task).
+- "strengths": 1-3 things most students clearly understand.
+- "next_steps": 3-4 short, ordered steps for the next lesson (with rough minutes).
+- "note_to_students": a friendly 3-5 sentence message the teacher may send to the whole class:
+  what went well, which idea to revise and how. No names, no scores of individuals, no blame.
+- "data_caution": one sentence on the limits of this data (e.g. few students, multiple choice only,
+  the two quizzes test different content).
+Be specific and cite numbers only as they appear in the data. Do not invent data.
+Write everything in {language}."""
+    return _ask(prompt, ClassInsight).model_dump()

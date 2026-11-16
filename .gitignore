@@ -1,4 +1,27 @@
+# --- Secrets and local settings ---
 .env
+.secret_key
+
+# --- Python / tools ---
 .venv/
 __pycache__/
+*.pyc
+bin/
+.vscode/
+.idea/
+.DS_Store
+
+# --- Runtime data (recreated by seed.py) ---
 lessons.db
+lessons.db-*
+lessons.backup-*.db
+*.db
+.public_url
+.tunnel.log
+.app.log
+
+# --- Exam materials, not part of the product ---
+Final_APPENDIX_7_Minds_and_Machines_Final_Exam.pdf
+*.pdf
+PITCH_SPEECH.md
+poster/

@@ -1,8 +1,12 @@
-<div class="form-row">
-  <label>Quiz level
-    <select name="level">{% for lv in levels %}<option>{{ lv }}</option>{% endfor %}</select>
-  </label>
-  <label>Number of questions
-    <select name="n">{% for n in [4,6,8,10] %}<option{% if n == 6 %} selected{% endif %}>{{ n }}</option>{% endfor %}</select>
-  </label>
-</div>
+<fieldset class="form-stack" style="border:0;padding:0">
+  <legend class="sr-only">Quiz level</legend>
+  <div class="level-picker">
+    {% for lv, desc in [('Basic', 'Remember & understand'), ('Medium', 'Apply in familiar tasks'), ('Advanced', 'Analyse new situations')] %}
+    <label><input type="radio" name="level" value="{{ lv }}"{% if loop.first %} checked{% endif %}><b>{{ lv }}</b><small>{{ desc }}</small></label>
+    {% endfor %}
+  </div>
+</fieldset>
+<label>Number of questions
+  <select name="n">{% for n in [4,6,8,10] %}<option{% if n == 6 %} selected{% endif %}>{{ n }}</option>{% endfor %}</select>
+</label>
+<p class="hint">Levels follow the revised Bloom taxonomy (Anderson &amp; Krathwohl, 2001).</p>

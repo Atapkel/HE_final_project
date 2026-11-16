@@ -1,51 +1,62 @@
 {% extends "base.html" %}
-{% block title %}Teacher workspace | Lesson Ready{% endblock %}
+{% block title %}Your lessons | Lesson Ready{% endblock %}
+{% macro phase(title, info) %}
+<span class="phase-line">
+  <span class="muted">{{ title }}:</span>
+  {% if not info %}<span class="faint">not created</span>
+  {% elif info.status == 'draft' %}<b class="draft-text">draft to review</b>
+  {% elif info.count %}<b>{{ info.count }} answers · {{ info.avg }}%</b>{% if info.weak %} <span class="pill warn">{{ info.weak }} weak</span>{% endif %}
+  {% else %}<span>open, waiting for students</span>{% endif %}
+</span>
+{% endmacro %}
+
 {% block content %}
-<div class="page-heading">
-  <h1>Teacher workspace</h1>
-  <p>Prepare a readiness quiz and a learning check for your class.</p>
+<div class="page-head">
+  <div><h1>Your lessons</h1>
+    {% if summary.lessons %}<p class="muted">{{ summary.lessons }} lessons · {{ summary.students }} students reached{% if summary.readiness is not none %} · average readiness {{ summary.readiness }}%{% endif %}</p>{% endif %}
+  </div>
 </div>
 
 <div class="workspace">
-  <section class="card" aria-labelledby="new-lesson">
-    <h2 id="new-lesson">New lesson</h2>
-    <p class="muted">Enter your topic to get a list of suggested prerequisites.</p>
-    <form method="post" action="{{ url_for('teacher_new') }}" class="form-stack" data-ai>
-      <label>Lesson topic
-        <input name="topic" required placeholder="e.g. Integration by parts">
-      </label>
-      <label>Course <span class="optional">Optional</span>
-        <input name="course" placeholder="e.g. Calculus II, 1st year">
-      </label>
-      <label>Quiz language
-        <select name="language">{% for l in languages %}<option>{{ l }}</option>{% endfor %}</select>
-      </label>
-      <div class="actions">
-        <button type="submit">Find prerequisites <span aria-hidden="true">→</span></button>
-      </div>
-      <p class="hint ai-status" role="status"></p>
-    </form>
-  </section>
-
-  <section class="card" aria-labelledby="my-lessons">
-    <h2 id="my-lessons">My lessons</h2>
-    {% if lessons %}
-    <ul class="lesson-list">
-      {% for l in lessons %}
+  <section aria-label="Lessons">
+    {% if rows %}
+    <ul class="lesson-rows">
+      {% for r in rows %}{% set l = r.lesson %}
       <li>
         <a href="{{ url_for('teacher_lesson', lesson_id=l.id) }}">
-          <span>
-            <strong>{{ l.topic }}</strong>
-            {% if l.course %}<small>{{ l.course }}</small>{% endif %}
-          </span>
-          <code>{{ l.code }}</code>
+          <div class="spread">
+            <h3 lang="{{ lang_code(l) }}">{{ l.topic }}</h3>
+            <span class="code-chip">{{ l.code }}</span>
+          </div>
+          <p class="lesson-meta small">
+            {% if l.course %}<span lang="{{ lang_code(l) }}">{{ l.course }}</span>{% endif %}
+            <span>{{ l.language }}</span><span>{{ l.created|when('%d %b') }}</span>
+            {% if l.is_sample %}<span class="pill sample">Sample class</span>{% endif %}
+          </p>
+          <p class="phases">{{ phase('Before class', r.get('pre')) }}{{ phase('After class', r.get('post')) }}</p>
         </a>
       </li>
       {% endfor %}
     </ul>
     {% else %}
-    <p class="empty">Lessons you create will appear here.</p>
+    <div class="blank"><h2>No lessons yet</h2><p class="muted">Create your first lesson with the form.</p></div>
     {% endif %}
   </section>
+
+  <aside>
+    <section class="card" aria-labelledby="new-lesson">
+      <h2 id="new-lesson" style="font-size:1.35rem;margin-bottom:14px">New lesson</h2>
+      <form method="post" action="{{ url_for('teacher_new') }}" class="form-stack" data-ai>
+        <label>Topic <input name="topic" required placeholder="e.g. Integration by parts"></label>
+        <label>Course <span class="optional">Optional</span><input name="course" placeholder="e.g. Calculus II, 1st year"></label>
+        <label>Language
+          <select name="language">{% for l in languages %}<option>{{ l }}</option>{% endfor %}</select>
+        </label>
+        <button type="submit" class="block">{{ icon('sparkle') }} Suggest prerequisites</button>
+        <p class="hint">The AI suggests what students should already know. You choose. Students see nothing yet.</p>
+        <p class="ai-status" role="status"></p>
+      </form>
+    </section>
+  </aside>
 </div>
 {% endblock %}

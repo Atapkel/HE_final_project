@@ -1,3 +1,5 @@
 flask>=3.0
 anthropic>=2.8
 pydantic>=2.0
+segno>=1.6
+gunicorn>=22.0

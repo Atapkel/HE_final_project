@@ -1,52 +1,54 @@
+{% from "_icons.html" import icon with context %}
 <!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#15302a">
   <title>{% block title %}Lesson Ready{% endblock %}</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23d9f26b'/%3E%3Cpath d='M9 16.5l4.5 4.5L23 11' fill='none' stroke='%2315302a' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
-<body>
+<body class="{% block body_class %}{% endblock %}">
+  {% block chrome %}
   <a class="skip-link" href="#main">Skip to content</a>
-  <header class="site-header">
-    <div class="header-inner">
+  <header class="topbar">
+    <div class="topbar-inner">
       <a href="{{ url_for('home') }}" class="brand">
-        <span class="brand-mark" aria-hidden="true"></span>
-        Lesson Ready
+        <span class="brand-mark">{{ icon('check') }}</span>Lesson Ready
       </a>
-      <nav aria-label="Main navigation">
+      <nav class="topnav" aria-label="Main">
         {% set page = request.endpoint or '' %}
-        <a href="{{ url_for('teacher_home') }}"{% if page.startswith('teacher_') %} aria-current="{{ 'page' if page == 'teacher_home' else 'true' }}"{% endif %}>Teacher</a>
-        <a href="{{ url_for('student_join') }}"{% if page.startswith('student_') %} aria-current="{{ 'page' if page == 'student_join' else 'true' }}"{% endif %}>Student</a>
+        {% if teacher %}
+          <a href="{{ url_for('teacher_home') }}"{% if page.startswith('teacher_') %} aria-current="page"{% endif %}>{{ icon('chart') }} Lessons</a>
+          <span class="who">{{ teacher.name }}</span>
+          <form method="post" action="{{ url_for('logout') }}"><button type="submit">{{ icon('logout') }} Sign out</button></form>
+        {% else %}
+          <a href="{{ url_for('student_join') }}"{% if page == 'student_join' %} aria-current="page"{% endif %}>Join a lesson</a>
+          {% if session.get('student_id') %}<a href="{{ url_for('student_history') }}"{% if page == 'student_history' %} aria-current="page"{% endif %}>My lessons</a>{% endif %}
+          <a href="{{ url_for('login') }}"{% if page in ('login', 'register') %} aria-current="page"{% endif %}>Teacher sign in</a>
+        {% endif %}
       </nav>
     </div>
   </header>
+  {% endblock %}
 
   <main id="main" class="shell {% block layout %}{% endblock %}" tabindex="-1">
     {% for message in get_flashed_messages() %}
-      <div class="flash" role="status">{{ message }}</div>
+      <div class="flash" role="status">{{ icon('info') }}<span>{{ message }}</span></div>
     {% endfor %}
     {% block content %}{% endblock %}
   </main>
 
-  <script>
-    document.querySelectorAll('form[data-ai]').forEach(form => {
-      const button = form.querySelector('button[type=submit]');
-      const status = form.querySelector('[role=status]');
-      const label = button.textContent;
-
-      form.addEventListener('submit', () => {
-        button.disabled = true;
-        button.textContent = 'Generating…';
-        status.textContent = 'AI is working. This may take up to a minute.';
-      });
-
-      window.addEventListener('pageshow', () => {
-        button.disabled = false;
-        button.textContent = label;
-        status.textContent = '';
-      });
-    });
-  </script>
+  {% block footer %}
+  <footer class="site-footer">
+    <div>
+      <span>Lesson Ready · AI drafts, people decide.</span>
+      <span>Prototype for <em>Minds and Machines in Learning</em> · Astana IT University · 2026</span>
+    </div>
+  </footer>
+  {% endblock %}
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="{{ url_for('static', filename='app.js') }}"></script>
 </body>
 </html>

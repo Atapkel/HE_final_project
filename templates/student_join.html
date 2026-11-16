@@ -1,18 +1,20 @@
 {% extends "base.html" %}
 {% block title %}Join a lesson | Lesson Ready{% endblock %}
-{% block layout %}join-shell{% endblock %}
+{% block layout %}tight{% endblock %}
 {% block content %}
-<div class="page-heading">
-  <h1>Join a lesson</h1>
-  <p>Use the five-character code from your teacher.</p>
-</div>
-<form method="post" class="card form-stack join-form">
+<div class="page-head"><div><span class="eyebrow">Student</span><h1>Join a lesson</h1><p class="lead">Use the 5-character code from your teacher.</p></div></div>
+<form method="post" class="card join-card">
   <label>Lesson code
-    <input name="code" value="{{ code }}" required autocomplete="off" autocapitalize="characters" spellcheck="false" class="code-input" placeholder="ABCDE" maxlength="5">
+    <input name="code" value="{{ code }}" required autocomplete="off" autocapitalize="characters" spellcheck="false" class="code-input" placeholder="ABCDE" maxlength="5"{% if not code %} autofocus{% endif %}>
   </label>
   <label>Your name
-    <input name="name" required autocomplete="name" value="{{ session.get('name', '') }}" placeholder="Enter your name">
+    <input name="name" required autocomplete="name" value="{{ session.get('name', '') }}" placeholder="First name and surname" maxlength="60"{% if code %} autofocus{% endif %}>
   </label>
-  <button type="submit">Join lesson <span aria-hidden="true">→</span></button>
+  <button type="submit" class="block lime">Join lesson {{ icon('arrow') }}</button>
+  <p class="hint" style="margin-top:-8px">Next you see the quizzes your teacher has opened for this lesson.</p>
+  <p class="hint">{{ icon('lock') }} No account. Only your name and answers are saved, and only your teacher sees them.</p>
 </form>
+{% if session.get('student_id') %}
+<p class="hint" style="margin-top:14px;text-align:center"><a href="{{ url_for('student_history') }}">See lessons you joined before</a></p>
+{% endif %}
 {% endblock %}

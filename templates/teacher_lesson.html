@@ -1,100 +1,188 @@
 {% extends "base.html" %}
 {% block title %}{{ lesson.topic }} | Lesson Ready{% endblock %}
 
-{% macro quiz_controls(quiz) %}
-<div class="quiz-controls">
-  <span class="muted">{{ quiz.level }}</span>
-  <span class="status{% if quiz.status == 'open' %} status-open{% endif %}">{{ 'Open for students' if quiz.status == 'open' else 'Closed' }}</span>
+{% macro quiz_line(quiz, review) %}
+<div class="quiz-line">
+  <span>{{ quiz.level }} · <b class="{{ 'ok' if quiz.status == 'open' else '' }}">{{ 'Open for students' if quiz.status == 'open' else 'Closed' }}</b>
+  {% if review and review.ai is defined %} · you reviewed {{ review.ai }} AI questions ({{ review.edited }} edited, {{ review.removed }} removed{% if review.added %}, {{ review.added }} added{% endif %}){% endif %}</span>
   <form method="post" action="{{ url_for('teacher_quiz_status', quiz_id=quiz.id) }}">
-    <button class="ghost compact" type="submit">{{ 'Close quiz' if quiz.status == 'open' else 'Open again' }}</button>
+    <button class="link-button" type="submit">{{ 'Close quiz' if quiz.status == 'open' else 'Reopen quiz' }}</button>
   </form>
 </div>
 {% endmacro %}
 
 {% block content %}
-<a class="back-link" href="{{ url_for('teacher_home') }}">← Teacher workspace</a>
-<div class="page-heading">
-  {% if lesson.course %}<p class="context">{{ lesson.course }}</p>{% endif %}
-  <h1>{{ lesson.topic }}</h1>
-</div>
+{% set pre, post = quizzes.get('pre'), quizzes.get('post') %}
+{% set here = url_for('teacher_lesson', lesson_id=lesson.id) %}
+{# One clear "next step", based on where the lesson is #}
+{% if not pre %}{% set nxt = ('Create the readiness quiz', url_for('teacher_prereqs', lesson_id=lesson.id), 'Start') %}
+{% elif pre.status == 'draft' %}{% set nxt = ('Review the AI draft and publish it', url_for('teacher_review', quiz_id=pre.id), 'Review draft') %}
+{% elif not post and stats['pre'].count == 0 %}{% set nxt = ('Show the QR code so students can join', url_for('teacher_present', lesson_id=lesson.id), 'Show QR code') %}
+{% elif not post or post.status == 'draft' %}{% set nxt = ('After teaching, create the learning check', here ~ '?tab=after', 'Go to After class') %}
+{% elif stats['post'].count == 0 %}{% set nxt = ('Show the QR code for the learning check', url_for('teacher_present', lesson_id=lesson.id), 'Show QR code') %}
+{% elif not analysis %}{% set nxt = ('Ask the AI why answers went wrong', here ~ '?tab=insights', 'Go to Insights') %}
+{% elif not lesson.note_published %}{% set nxt = ('Send feedback to the class', here ~ '?tab=insights#note', 'Write message') %}
+{% else %}{% set nxt = None %}{% endif %}
 
-<div class="stack">
-  <section class="card invite">
-    <div>
-      <h2>Invite students</h2>
-      <p>Share the code and this link with your class: <a href="{{ url_for('student_join', code=lesson.code) }}">{{ join_url }}</a></p>
-    </div>
-    <code class="lesson-code">{{ lesson.code }}</code>
-  </section>
+<a class="back-link" href="{{ url_for('teacher_home') }}">{{ icon('back') }} All lessons</a>
 
-  <div class="split-heading dashboard-heading">
-    <h2>Quizzes</h2>
-    <a class="button ghost compact" href="{{ url_for('teacher_lesson', lesson_id=lesson.id) }}">Refresh results</a>
+<header class="lesson-top">
+  <div class="stack-sm" style="gap:6px">
+    <h1 lang="{{ lang_code(lesson) }}">{{ lesson.topic }}</h1>
+    <p class="lesson-meta">
+      {% if lesson.course %}<span lang="{{ lang_code(lesson) }}">{{ lesson.course }}</span>{% endif %}
+      <span>{{ lesson.language }}</span>
+      <span><b data-joined>{{ joined }}</b> students joined</span>
+      {% if lesson.is_sample %}<span class="pill sample" title="Students in this class are simulated for the demo">Sample class</span>{% endif %}
+    </p>
   </div>
+  <div class="join-box">
+    <span class="muted small">Lesson code</span>
+    <span class="code-chip big">{{ lesson.code }}</span>
+    {% if stats %}<a class="button lime small" href="{{ url_for('teacher_present', lesson_id=lesson.id) }}">{{ icon('qr') }} Show QR code</a>{% endif %}
+  </div>
+</header>
 
-  <section class="card dashboard-quiz">
-    <p class="context">Before class</p>
-    <h3>Readiness quiz</h3>
-    {% set pre = quizzes.get('pre') %}
-    {% if not pre %}
-      <p class="muted">Check how well students know the topics they’ll need in class.</p>
-      <div class="actions">
-        <a class="button" href="{{ url_for('teacher_prereqs', lesson_id=lesson.id) }}">Create readiness quiz</a>
-      </div>
-    {% elif pre.status == 'draft' %}
-      <p class="muted">Your draft is ready to review.</p>
-      <div class="actions">
-        <a class="button" href="{{ url_for('teacher_review', quiz_id=pre.id) }}">Review and publish</a>
-      </div>
-    {% else %}
-      {{ quiz_controls(pre) }}
-      {% with s = stats['pre'], label_topic = 'Readiness by topic' %}{% include "_stats.html" %}{% endwith %}
-      {% if stats['pre'].count %}<p class="hint recap">Consider recapping topics marked “Needs attention” at the start of class.</p>{% endif %}
-    {% endif %}
-  </section>
+{# Hide the hint when this tab already shows the same action #}
+{% set same_here = (tab == 'before' and (not pre or pre.status == 'draft')) or (tab == 'after' and nxt and 'tab=after' in nxt[1]) or (tab == 'insights' and nxt and 'tab=insights' in nxt[1]) %}
+{% if nxt and not same_here %}
+<div class="next-step">
+  <span><span class="muted">Next step:</span> <b>{{ nxt[0] }}</b></span>
+  <a class="button small" href="{{ nxt[1] }}">{{ nxt[2] }} {{ icon('arrow') }}</a>
+</div>
+{% endif %}
 
-  <section class="card dashboard-quiz">
-    <p class="context">After class</p>
-    <h3>Learning check</h3>
-    {% set post = quizzes.get('post') %}
-    {% if post and post.status != 'draft' %}
-      {{ quiz_controls(post) }}
-      {% with s = stats['post'], label_topic = 'Results by topic' %}{% include "_stats.html" %}{% endwith %}
-    {% else %}
+<nav class="tabs" aria-label="Lesson" data-live-url="{{ url_for('teacher_live', lesson_id=lesson.id) }}" data-signature="{{ signature }}">
+  <a href="{{ here }}?tab=before"{% if tab == 'before' %} aria-current="page"{% endif %}>Before class</a>
+  <a href="{{ here }}?tab=after"{% if tab == 'after' %} aria-current="page"{% endif %}>After class</a>
+  <a href="{{ here }}?tab=insights"{% if tab == 'insights' %} aria-current="page"{% endif %}>Insights</a>
+  <span class="live-dot" title="Results update by themselves">Live</span>
+</nav>
+
+{# ---------- Before class ---------- #}
+{% if tab == 'before' %}
+<section aria-label="Readiness quiz">
+  {% if not pre %}
+    <div class="blank">
+      <h2>Readiness quiz</h2>
+      <p class="muted">A short, ungraded quiz on what students need to know <b>before</b> this lesson. Each student gets study notes only for the topics they miss.</p>
+      <a class="button" href="{{ url_for('teacher_prereqs', lesson_id=lesson.id) }}">{{ icon('sparkle') }} Create readiness quiz</a>
+    </div>
+  {% elif pre.status == 'draft' %}
+    <div class="blank">
+      <h2>The AI draft is ready</h2>
+      <p class="muted">Students see nothing until you review and publish it.</p>
+      <a class="button" href="{{ url_for('teacher_review', quiz_id=pre.id) }}">Review draft {{ icon('arrow') }}</a>
+    </div>
+  {% else %}
+    <h2 class="tab-title">Readiness quiz</h2>
+    {{ quiz_line(pre, reviews.get('pre')) }}
+    <div data-live="pre">{% with s = stats['pre'], kind = 'pre' %}{% include "_results.html" %}{% endwith %}</div>
+  {% endif %}
+</section>
+{% endif %}
+
+{# ---------- After class ---------- #}
+{% if tab == 'after' %}
+<section aria-label="Learning check">
+  {% if post and post.status != 'draft' %}
+    <h2 class="tab-title">Learning check</h2>
+    {{ quiz_line(post, reviews.get('post')) }}
+    <div data-live="post">{% with s = stats['post'], kind = 'post' %}{% include "_results.html" %}{% endwith %}</div>
+    <h2 class="tab-title" style="margin-top:36px">Before vs after</h2>
+    <div data-live="progress">{% include "_progress.html" %}</div>
+  {% else %}
+    <div class="blank" style="text-align:left">
+      <h2>Learning check</h2>
       {% if post %}
-      <p class="muted"><a href="{{ url_for('teacher_review', quiz_id=post.id) }}">Review the current draft</a> or generate a new one below.</p>
+        <p class="muted">A draft is waiting for your review.</p>
+        <a class="button" href="{{ url_for('teacher_review', quiz_id=post.id) }}">Review draft {{ icon('arrow') }}</a>
+        <p class="hint" style="margin-top:14px">Or create a new draft below.</p>
+      {% else %}
+        <p class="muted">After teaching, check what students learned. You review the questions before students see them.</p>
       {% endif %}
-      <form method="post" action="{{ url_for('teacher_post_quiz', lesson_id=lesson.id) }}" class="form-stack lesson-form" data-ai>
+      <form method="post" action="{{ url_for('teacher_post_quiz', lesson_id=lesson.id) }}" class="form-stack" style="margin-top:14px" data-ai>
         <label>What did you cover? <span class="optional">Optional</span>
-          <textarea name="notes" rows="3" placeholder="e.g. The formula, two worked examples, and how to choose u and dv"></textarea>
+          <textarea name="notes" rows="2" placeholder="e.g. Choosing k, distance metrics, feature scaling"></textarea>
         </label>
         {% include "_quiz_settings.html" %}
-        <div class="actions">
-          <button type="submit">Create learning check</button>
-        </div>
-        <p class="hint ai-status" role="status"></p>
+        <div class="actions"><button type="submit">{{ icon('sparkle') }} Create learning check</button><p class="ai-status" role="status"></p></div>
       </form>
-    {% endif %}
-  </section>
-
-  {% if progress %}
-  <section class="card">
-    <h2>Before and after</h2>
-    <p class="muted">The quizzes cover different material. Compare the scores as a rough guide.</p>
-    <div class="table-wrap">
-      <table>
-        <thead>
-          <tr><th scope="col">Student</th><th scope="col">Readiness</th><th scope="col">After class</th><th scope="col">Change (pp)</th></tr>
-        </thead>
-        <tbody>
-        {% for p in progress %}
-          <tr><th scope="row">{{ p.name }}</th><td>{{ p.pre }}%</td><td>{{ p.post }}%</td>
-              <td class="{{ 'up' if p.post >= p.pre else 'down' }}">{{ '%+d' % (p.post - p.pre) }}</td></tr>
-        {% endfor %}
-        </tbody>
-      </table>
     </div>
-  </section>
   {% endif %}
-</div>
+</section>
+{% endif %}
+
+{# ---------- Insights ---------- #}
+{% if tab == 'insights' %}
+<section aria-label="AI insights">
+  {% if not analysis %}
+    <div class="blank">
+      <h2>Why did students get it wrong?</h2>
+      <p class="muted">The AI reads the answer patterns of the whole class and suggests the main misconceptions and what to re-teach. It gets anonymous counts only, never names.</p>
+      <form method="post" action="{{ url_for('teacher_analyse', lesson_id=lesson.id) }}" data-ai>
+        <button type="submit"{% if not responses %} disabled{% endif %}>{{ icon('sparkle') }} Analyse results</button>
+        <p class="ai-status" role="status" style="justify-content:center;margin-top:10px">{% if not responses %}Available once students have answered.{% endif %}</p>
+      </form>
+    </div>
+  {% else %}
+  {% set a = analysis.content %}
+  {% set fresh = responses - analysis.row.responses %}
+  <div lang="{{ lang_code(lesson) }}">
+    <div class="insight-meta">
+      <span class="pill ai">{{ icon('sparkle') }} AI suggestion · check before acting</span>
+      <form method="post" action="{{ url_for('teacher_analyse', lesson_id=lesson.id) }}" data-ai class="row">
+        <span class="hint">{{ analysis.row.responses }} answers · {{ analysis.row.created|when }}</span>
+        <button type="submit" class="link-button">{{ 'Update (%d new answers)' % fresh if fresh > 0 else 'Analyse again' }}</button>
+        <span class="ai-status" role="status"></span>
+      </form>
+    </div>
+    <h2 class="insight-headline">{{ a.headline }}</h2>
+    <p class="muted" style="max-width:75ch">{{ a.summary }}</p>
+
+    {% if a.misconceptions %}
+    <h3 class="tab-title" style="margin-top:30px">Misconceptions</h3>
+    <ol class="miscon-list">
+      {% for m in a.misconceptions %}
+      <li>
+        <h4>{{ m.topic }}</h4>
+        {% for e in m.evidence %}<p class="evidence-line"><span class="ref">{{ e.ref }}</span> {{ e.pct }}% correct{% if e.wrong %} · {{ e.wrong_count }} of {{ e.n }} chose “{{ e.wrong }}”{% endif %}</p>{% endfor %}
+        <p>{{ m.what_students_think }}</p>
+        <p class="try"><b>Try in class:</b> {{ m.teaching_action }}</p>
+        <details><summary>Likely reason</summary><p>{{ m.why_it_happens }}</p></details>
+      </li>
+      {% endfor %}
+    </ol>
+    {% endif %}
+
+    <div class="grid-2" style="margin-top:26px">
+      <div><h3 class="tab-title">Next lesson plan</h3><ol class="step-list">{% for s_ in a.next_steps %}<li>{{ s_ }}</li>{% endfor %}</ol></div>
+      <div><h3 class="tab-title">Students understand</h3><ul class="check-list">{% for s_ in a.strengths %}<li>{{ s_ }}</li>{% endfor %}</ul></div>
+    </div>
+    <p class="hint" style="margin-top:16px">{{ a.data_caution }} Numbers like “R8 · 29% correct” are computed by the app, not by the AI.</p>
+  </div>
+  {% endif %}
+
+  <form method="post" action="{{ url_for('teacher_note', lesson_id=lesson.id) }}" class="note-form" id="note">
+    {% set draft = lesson.class_note or (analysis.content.note_to_students if analysis else '') %}
+    <div class="spread">
+      <h3>Message to the class</h3>
+      {% if lesson.note_published %}<span class="pill open">{{ icon('check') }} Students can see it</span>
+      {% elif draft and not lesson.class_note %}<span class="pill ai">{{ icon('sparkle') }} AI draft, please edit</span>{% endif %}
+    </div>
+    <textarea name="note" rows="5" lang="{{ lang_code(lesson) }}" aria-label="Message to the class" placeholder="Shown to every student on the lesson page. No names.">{{ draft }}</textarea>
+    <div class="actions">
+      <button type="submit" name="action" value="publish">{{ 'Update message' if lesson.note_published else 'Send to students' }}</button>
+      {% if lesson.note_published %}<button type="submit" name="action" value="save" class="link-button">Hide from students</button>{% endif %}
+    </div>
+  </form>
+</section>
+{% endif %}
+
+<details class="settings">
+  <summary>Lesson settings</summary>
+  <form method="post" action="{{ url_for('teacher_delete', lesson_id=lesson.id) }}" data-confirm="Delete this lesson and all student results? This cannot be undone.">
+    <button type="submit" class="danger small">{{ icon('trash') }} Delete lesson</button>
+  </form>
+</details>
 {% endblock %}

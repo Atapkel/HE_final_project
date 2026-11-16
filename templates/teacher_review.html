@@ -1,54 +1,91 @@
 {% extends "base.html" %}
 {% block title %}Review quiz | Lesson Ready{% endblock %}
-{% block layout %}reading-shell{% endblock %}
-{% block content %}
-<a class="back-link" href="{{ url_for('teacher_lesson', lesson_id=lesson.id) }}">← Lesson overview</a>
-<div class="page-heading">
-  <p class="context">{{ lesson.topic }} · {{ quiz.level }}</p>
-  <h1>Review the {{ 'readiness quiz' if quiz.kind == 'pre' else 'learning check' }}</h1>
-  <p>Check the AI’s answers and explanations. Uncheck any question you want to leave out before publishing.</p>
-</div>
+{% block layout %}narrow{% endblock %}
 
-<form method="post" class="stack">
-  {% for q in questions %}
-  <article class="card question">
-    <label class="review-question">
-      <input type="checkbox" name="keep" value="{{ loop.index0 }}" checked>
-      <span>
-        <span class="context">Question {{ loop.index }} · {{ q.prerequisite }}</span>
-        <strong>{{ q.text }}</strong>
-      </span>
-    </label>
-    <ol type="A" class="review-options">
-      {% for option in q.options %}
-        <li{% if loop.index0 == q.correct_index %} class="correct"{% endif %}>
-          {{ option }}{% if loop.index0 == q.correct_index %} <span class="option-status">Correct</span>{% endif %}
-        </li>
-      {% endfor %}
-    </ol>
-    <p class="explanation">{{ q.explanation }}</p>
-  </article>
-  {% endfor %}
+{% macro question_card(qid, q, n, origin, edited=False) %}
+{% set opts = (q.options if q else []) + ['', '', '', ''] %}
+<article class="card review-card{% if not q %} editing{% endif %}" data-qid="{{ qid }}">
+  <input type="hidden" name="qid" value="{{ qid }}">
+  <div class="review-top">
+    <div class="row">
+      <span class="question-count">Question <span data-num>{{ n }}</span></span>
+      {% if origin == 'ai' %}<span class="pill good" data-badge{% if not edited %} hidden{% endif %}>Edited by you</span>
+      {% else %}<span class="pill good">Your question</span>{% endif %}
+    </div>
+    <div class="row">
+      <button type="button" class="ghost small" data-edit>{{ icon('pencil') }} <span>Edit</span></button>
+      <label class="keep-toggle" title="Untick to leave this question out of the quiz"><input type="checkbox" name="{{ qid }}_keep" value="1" checked data-keep> In quiz</label>
+    </div>
+  </div>
+  <div class="q-body" lang="{{ lang_code(lesson) }}">
+    <div class="q-view">
+      <span class="pill" data-view-topic>{{ q.prerequisite if q else '' }}</span>
+      <h3 data-view-text style="margin-top:8px">{{ q.text if q else '' }}</h3>
+      <ol data-view-options>
+        {% for o in (q.options if q else []) %}
+        <li{% if loop.index0 == q.correct_index %} class="correct"{% endif %}><span class="letter">{{ 'ABCDEF'[loop.index0] }}</span><span>{{ o }}</span>{% if loop.index0 == q.correct_index %} {{ icon('check', 'correct') }}{% endif %}</li>
+        {% endfor %}
+      </ol>
+      <p class="explanation" data-view-expl{% if not (q and q.explanation) %} hidden{% endif %}>{{ q.explanation if q else '' }}</p>
+    </div>
+    <div class="q-edit">
+      <label>Question <textarea name="{{ qid }}_text" rows="2">{{ q.text if q else '' }}</textarea></label>
+      <fieldset class="stack-sm" style="border:0;padding:0">
+        <legend class="small" style="font-weight:600;margin-bottom:6px">Answer options <span class="optional">· select the correct one</span></legend>
+        {% for j in range(4) %}
+        <div class="opt-edit">
+          <input type="radio" name="{{ qid }}_correct" value="{{ j }}" aria-label="Option {{ 'ABCD'[j] }} is correct"{% if q and j == q.correct_index %} checked{% endif %}>
+          <input name="{{ qid }}_opt{{ j }}" value="{{ opts[j] }}" placeholder="Option {{ 'ABCD'[j] }}" aria-label="Option {{ 'ABCD'[j] }}">
+        </div>
+        {% endfor %}
+      </fieldset>
+      <label>Explanation students see after answering <textarea name="{{ qid }}_expl" rows="2">{{ q.explanation if q else '' }}</textarea></label>
+      <label>{{ 'Prerequisite it checks' if quiz.kind == 'pre' else 'Sub-topic' }}
+        <input name="{{ qid }}_topic" value="{{ q.prerequisite if q else (topics[0] if topics else '') }}" list="topics">
+      </label>
+      <div class="row"><button type="button" class="small" data-done>{{ icon('check') }} Done editing</button><span class="hint">Changes are kept when you save or publish.</span></div>
+    </div>
+  </div>
+</article>
+{% endmacro %}
+
+{% block content %}
+<a class="back-link" href="{{ url_for('teacher_lesson', lesson_id=lesson.id) }}">{{ icon('back') }} Lesson overview</a>
+<div class="page-head"><div>
+  <span class="eyebrow plain">{{ 'Step 2 of 2 · Readiness quiz' if quiz.kind == 'pre' else 'Learning check' }} · {{ quiz.level }}{% if quiz.kind == 'pre' %} · <a href="{{ url_for('teacher_prereqs', lesson_id=lesson.id) }}">change topics or level</a>{% endif %}</span>
+  <h1>Review before students see it</h1>
+  <p class="lead">AI can make mistakes. Check each answer, edit or untick what is wrong, then publish. Students see nothing before that.</p>
+</div></div>
+
+
+<datalist id="topics">{% for t in topics %}<option value="{{ t }}">{% endfor %}</datalist>
+<form method="post" class="stack" id="review-form">
+  <div class="stack" id="questions">
+    {% for item in items %}{{ question_card(item.qid, item.q, loop.index, item.origin, item.edited) }}{% endfor %}
+  </div>
+  <template id="new-question">{{ question_card('__ID__', None, '', 'teacher') }}</template>
+  <div><button type="button" class="link-button" id="add-question">{{ icon('plus') }} Add your own question</button></div>
 
   {% if resources %}
-  <section class="stack section-break" aria-labelledby="review-notes">
+  <section class="stack section" aria-labelledby="review-notes">
     <h2 id="review-notes">Study notes</h2>
-    <p class="muted">Students see these notes for topics they miss.</p>
+    <p class="muted">A student sees a note only for a topic they missed, with links to search for a video or article.</p>
     {% for r in resources %}
-    <article class="card">
+    <article class="card form-stack" lang="{{ lang_code(lesson) }}">
       <h3>{{ r.prerequisite }}</h3>
-      <p>{{ r.summary }}</p>
-      <p class="hint">Search query: “{{ r.search_query }}”</p>
+      <label>Note <textarea name="res{{ loop.index0 }}_summary" rows="4">{{ r.summary }}</textarea></label>
+      <label>Search words for videos and articles <input name="res{{ loop.index0 }}_query" value="{{ r.search_query }}"></label>
     </article>
     {% endfor %}
   </section>
   {% endif %}
 
-  <div class="actions">
-    <button type="submit">Publish to students</button>
-    {% if quiz.kind == 'pre' %}
-      <a class="button ghost" href="{{ url_for('teacher_prereqs', lesson_id=lesson.id) }}">Start again</a>
-    {% endif %}
+  <div class="sticky-bar spread">
+    <span class="muted small"><b data-count>{{ items|length }}</b> questions in the quiz</span>
+    <div class="actions">
+      <button type="submit" name="action" value="save" class="ghost" title="Keep your changes. Students still cannot see the quiz.">Save for later</button>
+      <button type="submit" name="action" value="publish" class="lime" title="Students with code {{ lesson.code }} can take it right away">{{ icon('check') }} Publish to students</button>
+    </div>
   </div>
 </form>
 {% endblock %}

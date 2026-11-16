@@ -1,30 +1,53 @@
 {% extends "base.html" %}
-{% block layout %}home-shell{% endblock %}
+{% block layout %}full{% endblock %}
 {% block content %}
 <section class="hero">
-  <div class="hero-copy">
-    <h1>Ready for<br> the lesson.</h1>
-    <p>Check what students know before class, help them fill the gaps, and see what they learned afterwards.</p>
-  </div>
-  <div class="hero-image">
-    <img src="{{ url_for('static', filename='lesson-notebook.jpg') }}" alt="" width="900" height="600">
+  <div class="hero-inner">
+    <div>
+      <span class="eyebrow" style="border-color:var(--lime);color:var(--lime)">{{ icon('sparkle') }} Human–AI collaboration</span>
+      <h1 style="margin-top:18px">Know the gaps <em>before</em> the lesson starts.</h1>
+      <p class="lead">Lesson Ready checks what students already know before class, gives each of them study notes for their own gaps, and helps the teacher see what the class really learned afterwards. The AI drafts. The teacher decides.</p>
+      <div class="actions">
+        <a class="button lime" href="{{ url_for('teacher_home') if teacher else url_for('login') }}">I'm a teacher {{ icon('arrow') }}</a>
+        <a class="button ghost" href="{{ url_for('student_join') }}">I'm a student · join with a code</a>
+      </div>
+    </div>
+    <div class="hero-visual">
+      <img src="{{ url_for('static', filename='lesson-notebook.jpg') }}" alt="" width="900" height="600">
+      <span class="float-chip two">{{ icon('cap') }} Students: ungraded readiness quiz</span>
+      <span class="float-chip one">{{ icon('alert') }} Weak topics flagged for the teacher</span>
+    </div>
   </div>
 </section>
 
-<div class="choices">
-  <a class="choice" href="{{ url_for('teacher_home') }}">
-    <div>
-      <h2>I'm a teacher</h2>
-      <p>Prepare a lesson, review AI suggestions, and see class results.</p>
+<section class="band" aria-labelledby="how">
+  <div class="section-title"><span class="eyebrow">How it works</span><h2 id="how">Five steps, one lesson</h2></div>
+  <ol class="steps">
+    <li><span class="step-icon">{{ icon('pencil') }}<b>1</b></span><span class="role">Teacher</span><strong>Types today’s topic</strong><small>e.g. “KNN algorithm”</small></li>
+    <li><span class="step-icon ai">{{ icon('sparkle') }}<b>2</b></span><span class="role">AI</span><strong>Drafts prerequisites &amp; quiz</strong><small>Basic, Medium or Advanced · EN / RU / KZ</small></li>
+    <li><span class="step-icon approve">{{ icon('shield') }}<b>3</b></span><span class="role">Teacher</span><strong>Approves &amp; edits every question</strong><small>Nothing reaches students without it</small></li>
+    <li><span class="step-icon student">{{ icon('cap') }}<b>4</b></span><span class="role">Student</span><strong>Takes the quiz, gets study notes</strong><small>Only for the topics they missed</small></li>
+    <li><span class="step-icon">{{ icon('chart') }}<b>5</b></span><span class="role">Teacher</span><strong>Sees readiness live</strong><small>Recaps weak topics first</small></li>
+  </ol>
+  <p class="hint" style="text-align:center;margin-top:14px">{{ icon('sparkle') }} <b>After the lesson:</b> a learning check, before-vs-after scores, and an AI class analysis that explains <em>why</em> answers went wrong.</p>
+</section>
+
+<section class="band" aria-labelledby="mm">
+  <div class="section-title"><span class="eyebrow">Minds and machines</span><h2 id="mm">AI drafts. People decide.</h2></div>
+  <div class="mm">
+    <div class="machine">
+      <span class="tag">Machine</span>
+      <h3>AI drafts</h3>
+      <ul><li>Prerequisite topics</li><li>Questions, explanations, study notes</li><li>Class analysis from anonymous answer counts</li></ul>
     </div>
-    <span class="choice-arrow" aria-hidden="true">↗</span>
-  </a>
-  <a class="choice" href="{{ url_for('student_join') }}">
-    <div>
-      <h2>I'm a student</h2>
-      <p>Join with a lesson code, take a quiz, and see what to review.</p>
+    <div class="gate">{{ icon('shield') }}<h3>Teacher approves</h3><small>nothing passes without it</small></div>
+    <div class="humans">
+      <span class="tag">Humans</span>
+      <h3>People decide</h3>
+      <ul><li><b>Teacher:</b> topics, level, edits or rejects items, what to recap, what to tell the class</li><li><b>Student:</b> studies own gaps, picks trusted sources</li></ul>
     </div>
-    <span class="choice-arrow" aria-hidden="true">↗</span>
-  </a>
-</div>
+  </div>
+  <p class="hint" style="margin-top:12px">{{ icon('lock') }} Grading and statistics are plain code, not AI. Student names never go to the AI.</p>
+</section>
+
 {% endblock %}

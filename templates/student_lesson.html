@@ -1,43 +1,57 @@
 {% extends "base.html" %}
 {% block title %}{{ lesson.topic }} | Lesson Ready{% endblock %}
-{% block layout %}reading-shell{% endblock %}
+{% block layout %}narrow{% endblock %}
 {% block content %}
-<a class="back-link" href="{{ url_for('student_join') }}">← Join another lesson</a>
-<div class="page-heading">
-  {% if lesson.course %}<p class="context">{{ lesson.course }}</p>{% endif %}
-  <h1>{{ lesson.topic }}</h1>
-  <p>Welcome, {{ session.name }}.</p>
-</div>
+<a class="back-link" href="{{ url_for('student_history') }}">{{ icon('back') }} My lessons</a>
+<div class="page-head"><div>
+  {% if lesson.course %}<span class="eyebrow plain" lang="{{ lang_code(lesson) }}">{{ lesson.course }}</span>{% endif %}
+  <h1 lang="{{ lang_code(lesson) }}">{{ lesson.topic }}</h1>
+  <div class="row"><p class="lead">Hi {{ session.name }}!</p><form method="post" action="{{ url_for('student_leave') }}"><button class="link-button small" type="submit">Not you? Switch student</button></form></div>
+</div></div>
 
 <div class="stack">
+{% if lesson.note_published and lesson.class_note %}
+  <section class="teacher-note" aria-labelledby="note-title">
+    <div class="row"><span class="badge">{{ icon('message') }}</span><h2 id="note-title" style="font-size:1.2rem">Message from your teacher</h2></div>
+    <p lang="{{ lang_code(lesson) }}">{{ lesson.class_note }}</p>
+  </section>
+{% endif %}
+
+{% set any = namespace(v=false) %}
 {% for kind, phase, title, description in [
-  ('pre', 'Before class', 'Readiness quiz', 'Check what you already know and get study notes for topics you miss.'),
-  ('post', 'After class', 'Learning check', 'Check what you learned during the lesson.')
+  ('pre', 'Before class', 'Readiness quiz', 'A short, ungraded check of what you need for this lesson. You get study notes for any topic you miss.'),
+  ('post', 'After class', 'Learning check', 'Check what you learned in the lesson and see explanations for every answer.')
 ] %}
   {% set q = quizzes.get(kind) %}
-  {% if q and q.status != 'draft' %}
+  {% if q and q.status != 'draft' %}{% set any.v = true %}
+  {% set a = done.get(q.id) %}
   <section class="card">
-    <p class="context">{{ phase }} · {{ q.level }}</p>
-    <h2>{{ title }}</h2>
+    <div class="spread">
+      <span class="eyebrow plain">{{ phase }} · {{ q.level }}</span>
+      {% if a %}<span class="pill good">{{ icon('check') }} Done · {{ a.score }}/{{ a.total }}</span>
+      {% elif q.status == 'open' %}<span class="pill open">Open now</span>
+      {% else %}<span class="pill closed">Closed</span>{% endif %}
+    </div>
+    <h2 style="margin:6px 0">{{ title }}</h2>
     <p class="muted">{{ description }}</p>
-    <div class="actions">
-      {% if q.id in done %}
-        <a class="button ghost" href="{{ url_for('student_result', quiz_id=q.id) }}">See my results</a>
+    <div class="actions" style="margin-top:14px">
+      {% if a %}
+        <a class="button ghost" href="{{ url_for('student_result', quiz_id=q.id) }}">{{ 'See my results and notes' if kind == 'pre' else 'See my results' }}</a>
       {% elif q.status == 'open' %}
-        <a class="button" href="{{ url_for('student_quiz', quiz_id=q.id) }}">Start quiz <span aria-hidden="true">→</span></a>
+        <a class="button lime" href="{{ url_for('student_quiz', quiz_id=q.id) }}">Start quiz {{ icon('arrow') }}</a>
+        <span class="hint">About 5 minutes · you can submit once</span>
       {% else %}
-        <span class="status">Quiz closed</span>
+        <span class="hint">Your teacher has closed this quiz.</span>
       {% endif %}
     </div>
   </section>
   {% endif %}
 {% endfor %}
 
-{% if (not quizzes.get('pre') or quizzes['pre'].status == 'draft') and
-      (not quizzes.get('post') or quizzes['post'].status == 'draft') %}
-  <section class="card">
-    <h2>No quiz available yet</h2>
-    <p class="muted">Refresh this page after your teacher opens the quiz.</p>
+{% if not any.v %}
+  <section class="empty">
+    <h2 style="font-size:1.2rem">No quiz yet</h2>
+    <p>Your teacher hasn’t opened a quiz. Refresh this page in a moment.</p>
   </section>
 {% endif %}
 </div>

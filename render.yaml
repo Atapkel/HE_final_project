@@ -1,0 +1,17 @@
+# One-click deploy on Render (https://render.com): New → Blueprint → pick this repository.
+services:
+  - type: web
+    name: lesson-ready
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    # Adds the demo teacher and sample classes on first start, then runs the app.
+    startCommand: python seed.py --if-empty && gunicorn app:app --workers 1 --threads 8 --timeout 120 --bind 0.0.0.0:$PORT
+    healthCheckPath: /
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.7
+      - key: CLAUDE_API
+        sync: false          # Render asks you for the key during setup; it is never stored in git
+      - key: SECRET_KEY
+        generateValue: true

@@ -1,0 +1,56 @@
+{% from "_icons.html" import icon with context %}
+{% if s.count == 0 %}
+  <p class="blank-line">{{ icon('users') }} No answers yet. Results appear here by themselves as students finish.</p>
+{% else %}
+<p class="summary-line"><b>{{ s.count }}</b> students finished · average <b>{{ s.avg }}%</b>
+  {% if s.weak_topics %} · <b class="warn-text">{{ s.weak_topics|length }} {{ 'topic' if s.weak_topics|length == 1 else 'topics' }} {{ 'to recap' if kind == 'pre' else 'below ' ~ WEAK ~ '%' }}</b>{% else %} · all topics above {{ WEAK }}%{% endif %}</p>
+
+<ul class="topic-list" lang="{{ lang_code(lesson) }}">
+  {% for t in s.topics %}
+  <li>
+    <div class="spread"><span>{{ t.name }}{% if t.pct < WEAK %} <span class="pill warn">Needs attention</span>{% endif %}</span><strong>{{ t.pct }}%</strong></div>
+    <div class="bar{% if t.pct < WEAK %} low{% endif %}"><span style="width: {{ t.pct }}%"></span></div>
+  </li>
+  {% endfor %}
+</ul>
+
+{% if kind == 'pre' and s.support %}
+<p class="support-line">{{ icon('users') }} <b>Check in before class:</b>
+  {% for st in s.support[:6] %}{{ st.name }} ({{ st.pct }}%){{ ', ' if not loop.last }}{% endfor %}
+  <span class="hint">· below 50%, only you see this</span></p>
+{% endif %}
+
+<details class="disclosure" data-key="{{ kind }}-questions">
+  <summary>Answers per question</summary>
+  <div lang="{{ lang_code(lesson) }}">
+    {% for q in s.questions %}
+    <div class="qstat">
+      <div class="qstat-head"><p><span class="ref">{{ q.ref }}</span> {{ q.text }}</p><strong class="{{ 'down' if q.pct < WEAK else '' }}">{{ q.pct }}%</strong></div>
+      <ul class="opt-bars">
+        {% for o in q.options %}
+        <li class="{{ 'correct' if o.correct else ('lure' if q.common_wrong == o.text and o.count else '') }}">
+          <span>{{ 'ABCDEF'[loop.index0] }}. {{ o.text }}{% if o.correct %} ✓{% endif %}</span>
+          <div class="bar"><span style="width: {{ o.pct }}%"></span></div>
+          <small>{{ o.count }}</small>
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% endfor %}
+    <p class="hint">Green: correct answer. Brown: the most common wrong answer.</p>
+  </div>
+</details>
+<details class="disclosure" data-key="{{ kind }}-students">
+  <summary>Answers per student</summary>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th scope="col">Name</th><th scope="col" class="num">Score</th><th scope="col">Missed topics</th></tr></thead>
+      <tbody>
+      {% for a in s.students %}
+        <tr><th scope="row">{{ a.name }}</th><td class="num {{ 'down' if a.pct < 50 else '' }}">{{ a.score }}/{{ a.total }}</td><td class="small muted" lang="{{ lang_code(lesson) }}">{{ a.missed|join(', ') or '—' }}</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</details>
+{% endif %}

@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Join {{ lesson.code }} | Lesson Ready{% endblock %}
+{% block body_class %}present{% endblock %}
+{% block chrome %}{% endblock %}
+{% block footer %}{% endblock %}
+{% block layout %}full{% endblock %}
+{% block content %}
+<a class="present-back" href="{{ url_for('teacher_lesson', lesson_id=lesson.id) }}">{{ icon('back') }} Back to results</a>
+<div class="present-wrap" data-live-url="{{ url_for('teacher_live', lesson_id=lesson.id) }}" data-signature="">
+  <div>
+    <div class="row"><span class="brand"><span class="brand-mark">{{ icon('check') }}</span>Lesson Ready</span></div>
+    <h1 style="margin-top:22px" lang="{{ lang_code(lesson) }}">{{ lesson.topic }}</h1>
+    <ol class="present-steps">
+      <li><b>1</b><span>Scan the QR code, or open<br><span class="present-url">{{ join_url.split('/j/')[0] }}/join</span></span></li>
+      <li><b>2</b><span>Enter the code and your name</span></li>
+      <li><b>3</b><span>Answer honestly. It is not graded: you get notes for your own gaps.</span></li>
+    </ol>
+    <div class="present-counts">
+      <div><strong data-joined>{{ joined }}</strong><span>joined</span></div>
+      {% for kind, label in [('pre', 'finished readiness'), ('post', 'finished learning check')] %}
+        {% if kind in stats %}<div><strong data-count="{{ kind }}">{{ stats[kind].count }}</strong><span>{{ label }}</span></div>{% endif %}
+      {% endfor %}
+    </div>
+  </div>
+  <div class="stack" style="justify-items:center">
+    <div class="present-qr" style="width:min(100%, 440px)">{{ qr_svg(join_url, 8) }}</div>
+    <div class="present-code" aria-label="Code {{ lesson.code|join(' ') }}">{{ lesson.code }}</div>
+  </div>
+</div>
+{% endblock %}

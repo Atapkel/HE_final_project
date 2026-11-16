@@ -1,0 +1,789 @@
+{
+ "knn": {
+  "topic": "KNN algorithm",
+  "course": "Machine Learning Engineering 1 · 2nd year",
+  "language": "English",
+  "prereqs": [
+   {
+    "name": "Supervised learning basics",
+    "why_needed": "KNN is a supervised method, so students must know what labeled training data and prediction targets are."
+   },
+   {
+    "name": "Classification and regression tasks",
+    "why_needed": "KNN can be used for both, and the way it votes or averages neighbors depends on which task is being solved."
+   },
+   {
+    "name": "Distance metrics (Euclidean and Manhattan)",
+    "why_needed": "KNN decides which points are nearest by computing a distance, so students must know how to calculate these distances."
+   },
+   {
+    "name": "Feature scaling and normalization",
+    "why_needed": "Distances are affected by the size of each feature, so students need to understand why scaling is needed before using KNN."
+   },
+   {
+    "name": "Training and test data split",
+    "why_needed": "Students must understand why data is split into training and test sets to correctly evaluate KNN's accuracy and overfitting."
+   }
+  ],
+  "pre": {
+   "level": "Basic",
+   "questions": [
+    {
+     "text": "In supervised learning, what does the training data contain?",
+     "options": [
+      "Inputs and their known target values",
+      "Only inputs without any labels",
+      "Only the target values",
+      "Only the model's own predictions"
+     ],
+     "correct_index": 0,
+     "explanation": "Supervised learning uses examples where the correct output (the label or target) is known. The model learns the link between inputs and these known outputs.",
+     "prerequisite": "Supervised learning basics"
+    },
+    {
+     "text": "Which task is an example of supervised learning?",
+     "options": [
+      "Grouping customers into clusters with no labels",
+      "Reducing the number of features in a dataset",
+      "Finding unusual transactions with no past examples",
+      "Predicting house prices from past sales with known prices"
+     ],
+     "correct_index": 3,
+     "explanation": "Past sales have known prices, so the model can learn from labelled examples. Clustering and feature reduction do not need known outputs.",
+     "prerequisite": "Supervised learning basics"
+    },
+    {
+     "text": "A model is trained on labelled data. What is the main goal of the training step?",
+     "options": [
+      "To learn a mapping from inputs to outputs that works on new data",
+      "To delete the labels from the dataset",
+      "To store every example exactly as it is",
+      "To make the dataset smaller without any purpose"
+     ],
+     "correct_index": 0,
+     "explanation": "Training aims to learn a pattern that predicts the correct output for new, unseen inputs. Storing data alone does not make a model useful.",
+     "prerequisite": "Supervised learning basics"
+    },
+    {
+     "text": "Which task is a classification task?",
+     "options": [
+      "Predicting tomorrow's temperature in degrees",
+      "Predicting the price of a used car",
+      "Predicting whether an email is spam or not spam",
+      "Predicting how many minutes a delivery will take"
+     ],
+     "correct_index": 2,
+     "explanation": "Classification predicts a category, such as spam or not spam. Temperature, price and time are numbers, so those tasks are regression.",
+     "prerequisite": "Classification and regression tasks"
+    },
+    {
+     "text": "What does a regression model predict?",
+     "options": [
+      "A category label",
+      "A group with no labels",
+      "A continuous numerical value",
+      "A yes or no answer only"
+     ],
+     "correct_index": 2,
+     "explanation": "Regression predicts a number that can take many values, such as a price or a height. Category labels are predicted in classification.",
+     "prerequisite": "Classification and regression tasks"
+    },
+    {
+     "text": "Which task is a regression task?",
+     "options": [
+      "Recognising handwritten digits from 0 to 9",
+      "Deciding whether a photo shows a cat",
+      "Predicting the monthly sales amount in euros",
+      "Labelling a message as positive or negative"
+     ],
+     "correct_index": 2,
+     "explanation": "Sales in euros is a number, so this is regression. The other tasks choose one category from a fixed set, which is classification.",
+     "prerequisite": "Classification and regression tasks"
+    },
+    {
+     "text": "Two points are at (0, 0) and (3, 4). What is their Manhattan distance?",
+     "options": [
+      "7",
+      "5",
+      "12",
+      "1"
+     ],
+     "correct_index": 0,
+     "explanation": "Manhattan distance adds the absolute differences in each coordinate: |3 - 0| + |4 - 0| = 3 + 4 = 7.",
+     "prerequisite": "Distance metrics (Euclidean and Manhattan)"
+    },
+    {
+     "text": "Two points are at (0, 0) and (3, 4). What is their Euclidean distance?",
+     "options": [
+      "12",
+      "7",
+      "1",
+      "5"
+     ],
+     "correct_index": 3,
+     "explanation": "Euclidean distance is the straight-line distance: the square root of (3² + 4²) = √25 = 5. Manhattan distance would give 7 for the same points.",
+     "prerequisite": "Distance metrics (Euclidean and Manhattan)"
+    }
+   ],
+   "resources": [
+    {
+     "prerequisite": "Supervised learning basics",
+     "summary": "Supervised learning is a type of machine learning where the training data includes inputs and known correct outputs, called labels or targets. The model studies many labelled examples and learns a pattern that links the inputs to the outputs. After training, the model uses this pattern to predict the output for new inputs it has not seen before. Common examples include predicting house prices and detecting spam emails.",
+     "search_query": "supervised learning basics beginner introduction labelled data"
+    },
+    {
+     "prerequisite": "Classification and regression tasks",
+     "summary": "Classification and regression are two main types of supervised learning tasks. Classification predicts a category, such as spam or not spam, or a type of animal in a photo. Regression predicts a continuous number, such as a price, a temperature or a delivery time. A simple test is to ask whether the answer is a category (classification) or a number on a scale (regression).",
+     "search_query": "classification vs regression machine learning explained simply"
+    },
+    {
+     "prerequisite": "Distance metrics (Euclidean and Manhattan)",
+     "summary": "A distance metric measures how far apart two points are. Euclidean distance is the straight-line distance between two points, found with the Pythagorean theorem. Manhattan distance adds the absolute differences along each axis, like walking along city blocks. Both give 0 for identical points and increase as points move further apart.",
+     "search_query": "Euclidean vs Manhattan distance explained with examples"
+    }
+   ]
+  },
+  "post": {
+   "level": "Medium",
+   "questions": [
+    {
+     "text": "A KNN classifier with k = 5 finds 3 neighbors labelled \"cat\" and 2 neighbors labelled \"dog\". What does it predict for the new point?",
+     "options": [
+      "dog",
+      "The average of \"cat\" and \"dog\"",
+      "cat",
+      "It cannot predict anything because the vote is not unanimous"
+     ],
+     "correct_index": 2,
+     "explanation": "For classification, KNN uses a majority vote among the k nearest neighbors. Three of the five neighbors are \"cat\", so the prediction is \"cat\".",
+     "prerequisite": "Prediction by vote or average"
+    },
+    {
+     "text": "A KNN regression model with k = 3 finds three neighbors with house prices 180, 250 and 220 (in thousands). What price does it predict?",
+     "options": [
+      "180 thousand",
+      "216.7 thousand",
+      "250 thousand",
+      "650 thousand"
+     ],
+     "correct_index": 1,
+     "explanation": "For regression, KNN takes the average of the k neighbor values. The sum is 650, and 650 divided by 3 is about 216.7 thousand.",
+     "prerequisite": "Prediction by vote or average"
+    },
+    {
+     "text": "A student uses k = 1 on a dataset with noisy labels. Which statement is most accurate?",
+     "options": [
+      "The model has high bias and low variance.",
+      "The model always gives the best accuracy on new data.",
+      "The model behaves like the average of all training points.",
+      "The model has low bias but high variance and may fit the noise."
+     ],
+     "correct_index": 3,
+     "explanation": "With k = 1, the prediction depends on one neighbor, so the model follows the training data closely. This gives low bias and high variance, and it can overfit noisy labels.",
+     "prerequisite": "Choosing k and bias-variance trade-off"
+    },
+    {
+     "text": "A teacher sets k equal to the total number of training points. What is the most likely result?",
+     "options": [
+      "The model predicts the majority class of the whole training set for almost every input.",
+      "The model becomes more sensitive to noise in the data.",
+      "Each prediction uses only the single nearest point.",
+      "Training time becomes much longer than with a small k."
+     ],
+     "correct_index": 0,
+     "explanation": "When k is very large, the neighborhood covers the whole dataset, so the vote is almost the same for every input. The model underfits and has high bias.",
+     "prerequisite": "Choosing k and bias-variance trade-off"
+    },
+    {
+     "text": "A dataset has two features: height in centimeters (range 150 to 200) and income in euros (range 20000 to 80000). Without scaling, which feature will mainly decide the distance between points?",
+     "options": [
+      "Height, because it is measured in centimeters",
+      "Both features equally, because KNN treats all features the same",
+      "Income, because its numbers are much larger",
+      "Neither, because KNN does not use distances"
+     ],
+     "correct_index": 2,
+     "explanation": "Distance uses the raw feature values, so large numbers like income dominate the distance. Scaling the features puts them on similar ranges.",
+     "prerequisite": "Feature scaling for distances"
+    },
+    {
+     "text": "Why is KNN expensive at prediction time when the training set is very large?",
+     "options": [
+      "It must train a new model for every query.",
+      "For each query, it must compute the distance to many training points.",
+      "It must rebuild the whole dataset before each prediction.",
+      "It must sort all labels again during every prediction step."
+     ],
+     "correct_index": 1,
+     "explanation": "KNN stores the training data and does no real training. For each new query, it computes distances to many stored points, so the cost grows with dataset size.",
+     "prerequisite": "Prediction cost of KNN"
+    }
+   ]
+  },
+  "analysis": {
+   "responses": 46,
+   "content": {
+    "headline": "Most students understand how KNN votes and averages, but many confuse Euclidean and Manhattan distance and forget that unscaled features change the distances.",
+    "summary": "Before class, students averaged 71% on prerequisites, strongest in supervised learning basics (88%) and weakest in distance metrics (46%). After class, the learning check averaged 81%, and 13 of the 22 students who took both quizzes scored higher afterwards. The two quizzes test different content, so the gain is a rough signal only, and the weakest area after class was feature scaling for distances (45%).",
+    "misconceptions": [
+     {
+      "topic": "Feature scaling for distances",
+      "question_refs": [
+       "L5"
+      ],
+      "what_students_think": "Many students believe KNN treats all features equally no matter their units. 12 students chose 'Both features equally', and 10 chose 'Income', which shows they did not see that large numbers dominate the distance.",
+      "why_it_happens": "Students may focus on the KNN voting rule and not on how distances are computed from raw feature values. The idea that units change distances is less visible than the algorithm steps.",
+      "teaching_action": "Show two points that differ by 10 cm in height and by 10 euros in income, then compute the Euclidean distance before and after min-max scaling. Ask students to predict which feature will decide the neighbours before they compute."
+     },
+     {
+      "topic": "Distance metrics (Euclidean and Manhattan)",
+      "question_refs": [
+       "R7",
+       "R8"
+      ],
+      "what_students_think": "Students mix up the two formulas. In R8, 14 students chose 7 (the Manhattan result) for Euclidean distance, and in R7, 8 students chose 5 (the Euclidean result) for Manhattan distance.",
+      "why_it_happens": "Both distances use the same two points and give similar-looking numbers. Students may remember that distance 'adds the differences' without remembering whether to square and take a root.",
+      "teaching_action": "Draw the (0,0) to (3,4) example on a grid. Trace the Manhattan path along the axes (3 plus 4) and the straight line (the hypotenuse), then ask students to write one sentence describing when each distance is used."
+     },
+     {
+      "topic": "Classification and regression tasks",
+      "question_refs": [
+       "R4",
+       "R5",
+       "R6"
+      ],
+      "what_students_think": "Some students confuse the output type. 6 students said temperature prediction is classification (R4), 5 said regression predicts a category label (R5), and 6 said digit recognition is regression (R6).",
+      "why_it_happens": "The word 'predict' is used for both tasks, so students may decide the task type from the topic instead of the kind of output (category or number).",
+      "teaching_action": "Give a quick sort task with 6 examples on cards. Students place each card under 'category output' or 'numeric output' before naming the task type, then compare answers in pairs."
+     },
+     {
+      "topic": "Choosing k and bias-variance trade-off",
+      "question_refs": [
+       "L3"
+      ],
+      "what_students_think": "6 students chose 'high bias and low variance' for k = 1, which suggests they think a very small k gives a simple, stable model. 12 students chose the correct answer (low bias, high variance), so the idea is partly understood.",
+      "why_it_happens": "Students may link 'simple' with 'k small' without thinking about how a single neighbour reacts to noisy labels.",
+      "teaching_action": "Plot a noisy 1D dataset and show the k = 1 boundary (jagged, following each noisy point) next to k = 15 (smoother). Ask students which model changes more if one training point is moved."
+     }
+    ],
+    "strengths": [
+     "Voting and averaging in KNN: both L1 and L2 were answered correctly by all 22 students who took the learning check (100%).",
+     "Supervised learning basics: R1 (96%) and R2 (88%) show a clear understanding of training data and supervised tasks.",
+     "Prediction cost of KNN: 95% of students (L6) understand that each query compares against many training points."
+    ],
+    "next_steps": [
+     "About 5 minutes: quick recap of supervised learning and the classification versus regression output types, using the sorting task.",
+     "About 15 minutes: work through the (0,0) and (3,4) example with Euclidean and Manhattan distance on the board, then a pair task with two new points.",
+     "About 15 minutes: a scaling demo with height and income, comparing neighbours before and after min-max scaling.",
+     "About 10 minutes: a k = 1 versus k = 15 comparison on noisy data, followed by one short question for students to answer in writing."
+    ],
+    "note_to_students": "Thank you for your work on the KNN lesson. Most of you understood how KNN chooses a class by voting and how it predicts a number by averaging, and this was very clear. Please review the difference between Euclidean and Manhattan distance, and write both formulas with one example. Also think about why features with large units (such as income) can dominate the distance, and how scaling helps.",
+    "data_caution": "The data comes from only 22 to 24 students, uses multiple-choice questions only, and the readiness and learning quizzes test different content, so the before-and-after comparison cannot show a direct cause."
+   }
+  }
+ },
+ "calculus": {
+  "topic": "Integration by parts",
+  "course": "Calculus II · 1st year",
+  "language": "English",
+  "prereqs": [
+   {
+    "name": "Antiderivatives and indefinite integrals",
+    "why_needed": "Integration by parts produces a new integral that must be evaluated, so the student must already know how to find antiderivatives."
+   },
+   {
+    "name": "Basic integration rules (power, exponential, trigonometric integrals)",
+    "why_needed": "After applying the parts formula, the remaining integrals are usually simple standard forms that the student must recognize and solve quickly."
+   },
+   {
+    "name": "Product rule for differentiation",
+    "why_needed": "Integration by parts is derived from the product rule, so understanding how to differentiate a product is essential to see why the formula works."
+   },
+   {
+    "name": "Substitution method (u-substitution)",
+    "why_needed": "Students need to compare integration by parts with substitution and choose the correct method, and substitution often appears inside parts problems."
+   },
+   {
+    "name": "Definite integrals and the Fundamental Theorem of Calculus",
+    "why_needed": "Many integration by parts problems are definite integrals, where the boundary terms must be evaluated using the Fundamental Theorem of Calculus."
+   }
+  ],
+  "pre": {
+   "level": "Medium",
+   "questions": [
+    {
+     "text": "Which expression is an antiderivative of f(x) = 3x^2?",
+     "options": [
+      "x^3 + C",
+      "6x + C",
+      "x^3/3 + C",
+      "3x^3 + C"
+     ],
+     "correct_index": 0,
+     "explanation": "The derivative of x^3 is 3x^2, so x^3 is an antiderivative. Option 3 is wrong because differentiating x^3/3 gives x^2, not 3x^2.",
+     "prerequisite": "Antiderivatives and indefinite integrals"
+    },
+    {
+     "text": "What is the value of the integral of e^(2x) with respect to x?",
+     "options": [
+      "e^(2x) + C",
+      "(1/2)e^(2x) + C",
+      "2e^(2x) + C",
+      "e^x / 2 + C"
+     ],
+     "correct_index": 1,
+     "explanation": "The derivative of e^(2x) is 2e^(2x), so you need the factor 1/2 to undo the chain-rule factor 2.",
+     "prerequisite": "Basic integration rules (power, exponential, trigonometric integrals)"
+    },
+    {
+     "text": "What is the derivative of x sin(x) with respect to x?",
+     "options": [
+      "x cos(x)",
+      "cos(x)",
+      "sin(x) + x cos(x)",
+      "2x cos(x)"
+     ],
+     "correct_index": 2,
+     "explanation": "By the product rule, the derivative of x·sin(x) is 1·sin(x) + x·cos(x). Many students forget the first term.",
+     "prerequisite": "Product rule for differentiation"
+    },
+    {
+     "text": "What is the integral of 2x cos(x^2) with respect to x?",
+     "options": [
+      "cos(x^2) + C",
+      "-sin(x^2) + C",
+      "x^2 sin(x^2) + C",
+      "sin(x^2) + C"
+     ],
+     "correct_index": 3,
+     "explanation": "Let u = x^2, so du = 2x dx. Then the integral becomes the integral of cos(u) du, which is sin(u) + C = sin(x^2) + C.",
+     "prerequisite": "Substitution method (u-substitution)"
+    },
+    {
+     "text": "What is the integral of 1/x with respect to x, for x > 0?",
+     "options": [
+      "ln(x) + C",
+      "-1/x^2 + C",
+      "x^0 / 0 + C",
+      "1/x^2 + C"
+     ],
+     "correct_index": 0,
+     "explanation": "The power rule does not apply to x^(-1), because it would divide by zero. The correct result is the natural logarithm, ln(x) + C.",
+     "prerequisite": "Basic integration rules (power, exponential, trigonometric integrals)"
+    },
+    {
+     "text": "What is the integral of x(x^2 + 1)^3 with respect to x?",
+     "options": [
+      "(x^2 + 1)^4 / 4 + C",
+      "(x^2 + 1)^4 / 8 + C",
+      "(x^2 + 1)^3 / 6 + C",
+      "x^2(x^2 + 1)^4 / 4 + C"
+     ],
+     "correct_index": 1,
+     "explanation": "Let u = x^2 + 1, so du = 2x dx and x dx = du/2. The integral becomes (1/2) times the integral of u^3 du, which equals u^4/8 + C.",
+     "prerequisite": "Substitution method (u-substitution)"
+    }
+   ],
+   "resources": [
+    {
+     "prerequisite": "Antiderivatives and indefinite integrals",
+     "summary": "An antiderivative of a function f is a function F whose derivative is f. Integration is the reverse of differentiation. Because the derivative of a constant is zero, every antiderivative has a constant C, so we write the indefinite integral as F(x) + C. You can always check an answer by differentiating it and seeing if you get the original function back.",
+     "search_query": "antiderivatives and indefinite integrals introduction calculus"
+    },
+    {
+     "prerequisite": "Basic integration rules (power, exponential, trigonometric integrals)",
+     "summary": "The power rule says that the integral of x^n is x^(n+1)/(n+1) + C, for n not equal to -1. The integral of e^(kx) is e^(kx)/k + C, and the integral of 1/x is ln|x| + C. The integrals of sin(x) and cos(x) are -cos(x) + C and sin(x) + C. Always divide by the inner coefficient when the input is kx, because differentiating would multiply by k.",
+     "search_query": "basic integration rules power exponential trigonometric integrals"
+    },
+    {
+     "prerequisite": "Product rule for differentiation",
+     "summary": "The product rule says that the derivative of u(x)v(x) is u'(x)v(x) + u(x)v'(x). You must take the derivative of each factor one at a time while keeping the other factor. A common mistake is to multiply the derivatives together, which is not correct. Practice with simple examples such as x times e^x or x times sin(x).",
+     "search_query": "product rule differentiation explained with examples"
+    },
+    {
+     "prerequisite": "Substitution method (u-substitution)",
+     "summary": "Substitution replaces a part of the integral with a new variable u, usually an inner function whose derivative also appears in the integrand. You write du as the derivative of u times dx, then rewrite the whole integral in terms of u. After integrating, you must replace u with the original expression in x. Check the answer by differentiating it.",
+     "search_query": "u-substitution method integration step by step"
+    }
+   ]
+  }
+ },
+ "normalization": {
+  "topic": "Нормализация баз данных",
+  "course": "Базы данных · 2 курс",
+  "language": "Russian",
+  "prereqs": [
+   {
+    "name": "Реляционная модель данных",
+    "why_needed": "Нормализация работает с таблицами, строками, столбцами и связями между ними, поэтому студент должен понимать, что такое отношение в реляционной модели."
+   },
+   {
+    "name": "Первичный ключ и ключи (внешний, возможный, суперключ)",
+    "why_needed": "Определения функциональных зависимостей и нормальных форм опираются на понятие ключа, без него нельзя проверить, какие атрибуты определяют строку."
+   },
+   {
+    "name": "Функциональные зависимости (базовое понятие)",
+    "why_needed": "Нормальные формы формулируются через функциональные зависимости между атрибутами, поэтому их нужно знать до начала урока."
+   },
+   {
+    "name": "Проектирование таблиц и связей (ER-модель)",
+    "why_needed": "Студент должен уметь выделять сущности, атрибуты и связи, чтобы понимать, почему одни данные дублируются и как их разделить по таблицам."
+   },
+   {
+    "name": "Язык SQL: создание таблиц и запросы SELECT с JOIN",
+    "why_needed": "На практике результаты нормализации проверяются запросами, которые объединяют разделённые таблицы, поэтому студенту нужен базовый SQL."
+   }
+  ],
+  "pre": {
+   "level": "Basic",
+   "questions": [
+    {
+     "text": "Что в реляционной модели называют отношением (таблицей)?",
+     "options": [
+      "Файл с произвольным текстом",
+      "Таблицу из строк и столбцов с именованными атрибутами",
+      "Граф связей между объектами",
+      "Список данных без структуры"
+     ],
+     "correct_index": 1,
+     "explanation": "В реляционной модели данные хранятся в таблицах (отношениях). Каждая таблица имеет фиксированный набор именованных атрибутов (столбцов).",
+     "prerequisite": "Реляционная модель данных"
+    },
+    {
+     "text": "Как называется строка таблицы в реляционной модели?",
+     "options": [
+      "Атрибут",
+      "Домен",
+      "Схема",
+      "Кортеж"
+     ],
+     "correct_index": 3,
+     "explanation": "Строка таблицы называется кортежем. Столбец называется атрибутом, а схема описывает структуру таблицы.",
+     "prerequisite": "Реляционная модель данных"
+    },
+    {
+     "text": "Какое свойство обязательно для первичного ключа?",
+     "options": [
+      "Может повторяться в разных строках",
+      "Может быть пустым (NULL)",
+      "Однозначно определяет строку таблицы",
+      "Всегда состоит из двух атрибутов"
+     ],
+     "correct_index": 2,
+     "explanation": "Первичный ключ уникально определяет каждую строку таблицы. Его значения не повторяются и не бывают пустыми.",
+     "prerequisite": "Первичный ключ и ключи (внешний, возможный, суперключ)"
+    },
+    {
+     "text": "Что такое внешний ключ?",
+     "options": [
+      "Любой уникальный столбец таблицы",
+      "Атрибут, который ссылается на первичный ключ другой таблицы",
+      "Ключ, который нельзя использовать в связях",
+      "Набор всех атрибутов таблицы"
+     ],
+     "correct_index": 1,
+     "explanation": "Внешний ключ — это атрибут одной таблицы, значения которого совпадают со значениями первичного ключа другой таблицы. Так создаётся связь между таблицами.",
+     "prerequisite": "Первичный ключ и ключи (внешний, возможный, суперключ)"
+    },
+    {
+     "text": "Запись A → B (функциональная зависимость) означает, что:",
+     "options": [
+      "значение A однозначно определяет значение B",
+      "значение B однозначно определяет значение A",
+      "A и B всегда одинаковы",
+      "A и B хранятся в разных таблицах"
+     ],
+     "correct_index": 0,
+     "explanation": "Запись A → B значит: если two строки имеют одинаковое значение A, то у них одинаковое и значение B. Значение A однозначно определяет B.",
+     "prerequisite": "Функциональные зависимости (базовое понятие)"
+    },
+    {
+     "text": "В ER-модели связь «многие ко многим» обычно реализуется в реляционной схеме через:",
+     "options": [
+      "одну общую таблицу без ключей",
+      "удаление одной из сущностей",
+      "добавление списка значений в один атрибут",
+      "отдельную таблицу-связку с внешними ключами к обеим сущностям"
+     ],
+     "correct_index": 3,
+     "explanation": "Связь «многие ко многим» переводят в отдельную таблицу-связку. Она содержит внешние ключи к обеим связанным сущностям.",
+     "prerequisite": "Проектирование таблиц и связей (ER-модель)"
+    }
+   ],
+   "resources": [
+    {
+     "prerequisite": "Реляционная модель данных",
+     "summary": "Реляционная модель хранит данные в виде таблиц, которые называют отношениями. Каждая таблица имеет столбцы-атрибуты с именами и строки-кортежи с данными. Одна строка описывает один объект или факт. Таблицы связаны друг с другом через значения, а не через физические указатели.",
+     "search_query": "реляционная модель данных основы видео для начинающих"
+    },
+    {
+     "prerequisite": "Первичный ключ и ключи (внешний, возможный, суперключ)",
+     "summary": "Суперключ — это набор атрибутов, который однозначно определяет строку таблицы. Возможный ключ — это минимальный суперключ, то есть без лишних атрибутов. Один из возможных ключей выбирают первичным; он не может быть пустым и не должен повторяться. Внешний ключ ссылается на первичный ключ другой таблицы и создаёт связь между ними.",
+     "search_query": "первичный внешний возможный суперключ базы данных объяснение"
+    },
+    {
+     "prerequisite": "Функциональные зависимости (базовое понятие)",
+     "summary": "Функциональная зависимость A → B означает, что значение A однозначно задаёт значение B. Например, если по коду студента всегда известно его имя, то код → имя. Зависимости показывают, какие атрибуты логически связаны. Понимание зависимостей нужно, чтобы находить избыточность в таблицах. На этом основана нормализация.",
+     "search_query": "функциональные зависимости в базах данных простое объяснение"
+    },
+    {
+     "prerequisite": "Проектирование таблиц и связей (ER-модель)",
+     "summary": "ER-модель описывает сущности, их атрибуты и связи между сущностями. Связи бывают «один к одному», «один ко многим» и «многие ко многим». При переходе к таблицам каждая сущность становится таблицей, а связь «один ко многим» реализуется внешним ключом. Связь «многие ко многим» требует отдельной таблицы-связки. Хорошая схема начинается с ясного списка сущностей.",
+     "search_query": "ER-модель проектирование баз данных связи один ко многим"
+    }
+   ]
+  }
+ },
+ "regression_kz": {
+  "topic": "Сызықтық регрессия",
+  "course": "Машиналық оқыту негіздері · 3 курс",
+  "language": "Kazakh",
+  "prereqs": [
+   {
+    "name": "Сызықтық теңдеулер және функциялар (y = ax + b)",
+    "why_needed": "Сызықтық регрессия моделі тура осы түрдегі сызықтық функцияға негізделгендіктен, бұл түсінік міндетті."
+   },
+   {
+    "name": "Сызықтық алгебра: векторлар мен матрицалар",
+    "why_needed": "Бірнеше белгісі бар деректерді және модель коэффициенттерін вектор немесе матрица түрінде жазу және есептеу қажет."
+   },
+   {
+    "name": "Дифференциал есептеу: туынды және градиент",
+    "why_needed": "Модель қатесін азайту үшін параметрлерді градиенттік түсу әдісімен жаңарту керек, ал ол туындыны пайдаланады."
+   },
+   {
+    "name": "Статистика: орташа мән, дисперсия, ковариация және корреляция",
+    "why_needed": "Айнымалылар арасындағы байланысты өлшеу және сызықтық модельдің коэффициенттерін бағалау үшін осы ұғымдар қолданылады."
+   },
+   {
+    "name": "Python және NumPy негіздері",
+    "why_needed": "Сабақта модельді деректерге практикалық түрде қолдану үшін массивтермен кодта жұмыс істей білу керек."
+   }
+  ],
+  "pre": {
+   "level": "Basic",
+   "questions": [
+    {
+     "text": "y = 2x + 3 функциясындағы 2 саны нені көрсетеді?",
+     "options": [
+      "Бос мүшені (y осімен қиылысу нүктесін)",
+      "Бұрыштық коэффициентті (еңісті)",
+      "y-тің мәнін",
+      "x-тің мәнін"
+     ],
+     "correct_index": 1,
+     "explanation": "Сызықтық функцияда y = ax + b түріндегі a коэффициенті бұрыштық коэффициент деп аталады және түзудің еңісін анықтайды.",
+     "prerequisite": "Сызықтық теңдеулер және функциялар (y = ax + b)"
+    },
+    {
+     "text": "y = 2x + 3 функциясында x = 0 болғанда y неге тең?",
+     "options": [
+      "0",
+      "2",
+      "3",
+      "5"
+     ],
+     "correct_index": 2,
+     "explanation": "x = 0 болса, y = 2 · 0 + 3 = 3. Бұл b мәні, яғни түзудің y осімен қиылысу нүктесі.",
+     "prerequisite": "Сызықтық теңдеулер және функциялар (y = ax + b)"
+    },
+    {
+     "text": "[1, 2] + [3, 4] векторларының қосындысы қандай?",
+     "options": [
+      "[4, 6]",
+      "[3, 8]",
+      "[4, 5]",
+      "[2, 6]"
+     ],
+     "correct_index": 0,
+     "explanation": "Векторларды қосу үшін сәйкес координаталар қосылады: 1 + 3 = 4 және 2 + 4 = 6.",
+     "prerequisite": "Сызықтық алгебра: векторлар мен матрицалар"
+    },
+    {
+     "text": "Төмендегілердің қайсысы 2×2 матрица болып табылады?",
+     "options": [
+      "[1, 2, 3]",
+      "5",
+      "[1, 2]",
+      "[[1, 2], [3, 4]]"
+     ],
+     "correct_index": 3,
+     "explanation": "2×2 матрицада екі жол және екі баған болады. [[1, 2], [3, 4]] жазбасында дәл осылай.",
+     "prerequisite": "Сызықтық алгебра: векторлар мен матрицалар"
+    },
+    {
+     "text": "f(x) = x² функциясының туындысы қандай?",
+     "options": [
+      "x",
+      "x²",
+      "2x",
+      "2"
+     ],
+     "correct_index": 2,
+     "explanation": "x² функциясының туындысы 2x. Дәреже көрсеткіші 2 алдына шығып, дәреже бір азаяды.",
+     "prerequisite": "Дифференциал есептеу: туынды және градиент"
+    },
+    {
+     "text": "Корреляция коэффициенті қандай мәндер аралығында болады?",
+     "options": [
+      "-1-ден 1-ге дейін",
+      "0-ден 1-ге дейін",
+      "-∞-тен +∞-ке дейін",
+      "0-ден 100-ге дейін"
+     ],
+     "correct_index": 0,
+     "explanation": "Корреляция коэффициенті әрқашан -1 мен 1 арасында жатады. Мән 1-ге жақын болса, байланыс күшті оң, -1-ге жақын болса, күшті теріс болады.",
+     "prerequisite": "Статистика: орташа мән, дисперсия, ковариация және корреляция"
+    }
+   ],
+   "resources": [
+    {
+     "prerequisite": "Сызықтық теңдеулер және функциялар (y = ax + b)",
+     "summary": "Сызықтық функция y = ax + b түрінде жазылады. Мұндағы a бұрыштық коэффициент, ол түзудің еңісін көрсетеді. b бос мүше, ол түзудің y осімен қиылысу нүктесі. Егер a оң болса, түзу өспелі, ал теріс болса, кемімелі болады. Осы түсінік регрессия моделінің негізі болып табылады.",
+     "search_query": "y = ax + b сызықтық функция түзу еңісі бос мүше"
+    },
+    {
+     "prerequisite": "Сызықтық алгебра: векторлар мен матрицалар",
+     "summary": "Вектор – сандардың реттелген жиыны, мысалы [1, 2]. Векторларды қосқанда сәйкес координаталар қосылады. Матрица – жолдар мен бағандарға орналасқан сандар кестесі. Матрицаны вектормен көбейтуге болады, ал бұл деректерді ықшам жазуға мүмкіндік береді. Машиналық оқытуда деректер жиі матрица түрінде беріледі.",
+     "search_query": "векторлар және матрицалар негіздері сызықтық алгебра"
+    },
+    {
+     "prerequisite": "Дифференциал есептеу: туынды және градиент",
+     "summary": "Туынды функцияның өзгеру жылдамдығын көрсетеді. Мысалы, x² функциясының туындысы 2x. Егер функция бірнеше айнымалыдан тәуелді болса, градиент әр айнымалы бойынша туындылардан тұратын векторы болады. Градиент функцияның ең тез өсу бағытын көрсетеді. Машиналық оқытуда градиент қатені азайту үшін қолданылады.",
+     "search_query": "туынды ұғымы және градиент түсіндіру"
+    },
+    {
+     "prerequisite": "Статистика: орташа мән, дисперсия, ковариация және корреляция",
+     "summary": "Орташа мән – мәндер қосындысын мәндер санына бөлгенде шыққан сан. Дисперсия мәндердің орташадан ауытқуын өлшейді. Ковариация екі шаманың birge өзгеру дәрежесін көрсетеді. Корреляция коэффициенті ковариацияны стандартты ауытқуға бөліп алынады және оның мәні -1 мен 1 арасында болады.",
+     "search_query": "корреляция коэффициенті ковариация дисперсия түсіндіру"
+    }
+   ]
+  }
+ },
+ "gradient": {
+  "topic": "Gradient descent",
+  "course": "Machine Learning Engineering 1 · 2nd year",
+  "language": "English",
+  "prereqs": [
+   {
+    "name": "Derivatives and partial derivatives",
+    "why_needed": "Gradient descent uses the gradient, which is made of partial derivatives, to find the direction in which the loss function decreases fastest."
+   },
+   {
+    "name": "Functions of several variables",
+    "why_needed": "Machine learning loss functions depend on many parameters at once, so students must understand how a function with many inputs behaves."
+   },
+   {
+    "name": "Vectors and vector operations",
+    "why_needed": "Model parameters and gradients are stored as vectors, and the update step adds or subtracts scaled vectors."
+   },
+   {
+    "name": "Loss functions (for example, mean squared error)",
+    "why_needed": "Gradient descent minimises a loss function, so students must know what a loss measures and how it is computed from data and predictions."
+   },
+   {
+    "name": "Linear regression or a simple linear model",
+    "why_needed": "A simple model is the usual first example used to show how gradient descent updates weights step by step."
+   }
+  ],
+  "pre": {
+   "level": "Basic",
+   "questions": [
+    {
+     "text": "What does the derivative of a function f(x) at a point tell you?",
+     "options": [
+      "The area under the curve of f",
+      "The rate of change of f at that point",
+      "The value of f when x is 0",
+      "The largest value that f can reach"
+     ],
+     "correct_index": 1,
+     "explanation": "The derivative measures how fast the function value changes as x changes. It is the slope of the curve at that point.",
+     "prerequisite": "Derivatives and partial derivatives"
+    },
+    {
+     "text": "What is the partial derivative of f(x, y) = x + 3y with respect to y?",
+     "options": [
+      "x",
+      "x + 3",
+      "3",
+      "y"
+     ],
+     "correct_index": 2,
+     "explanation": "When you take the partial derivative with respect to y, you treat x as a constant. The term 3y gives 3, and x is constant, so the result is 3.",
+     "prerequisite": "Derivatives and partial derivatives"
+    },
+    {
+     "text": "Which of these is a function of two variables?",
+     "options": [
+      "f(x, y) = x + y",
+      "f(x) = 3x",
+      "g(t) = sin(t)",
+      "h(z) = z cubed"
+     ],
+     "correct_index": 0,
+     "explanation": "A function of two variables takes two inputs, such as x and y. Only f(x, y) = x + y has two inputs.",
+     "prerequisite": "Functions of several variables"
+    },
+    {
+     "text": "What is the sum of the vectors (1, 2) and (3, 4)?",
+     "options": [
+      "(3, 8)",
+      "(1, 2)",
+      "11",
+      "(4, 6)"
+     ],
+     "correct_index": 3,
+     "explanation": "To add vectors, add the matching components. So 1 + 3 = 4 and 2 + 4 = 6, giving (4, 6).",
+     "prerequisite": "Vectors and vector operations"
+    },
+    {
+     "text": "Which vector operation gives a single number (a scalar) as its result?",
+     "options": [
+      "Vector addition",
+      "Multiplying a vector by a number",
+      "The dot product",
+      "Reversing the order of the coordinates"
+     ],
+     "correct_index": 2,
+     "explanation": "The dot product multiplies matching components and adds the results. This gives one number, not a new vector.",
+     "prerequisite": "Vectors and vector operations"
+    },
+    {
+     "text": "What does a loss function measure?",
+     "options": [
+      "How large the dataset is",
+      "How far the model's predictions are from the true values",
+      "The number of parameters in the model",
+      "The learning rate used in training"
+     ],
+     "correct_index": 1,
+     "explanation": "A loss function gives a number that shows how wrong the predictions are. Training tries to make this number smaller.",
+     "prerequisite": "Loss functions (for example, mean squared error)"
+    }
+   ],
+   "resources": [
+    {
+     "prerequisite": "Derivatives and partial derivatives",
+     "summary": "A derivative shows how fast a function changes when its input changes. Geometrically, it is the slope of the graph at a point. A partial derivative works the same way for a function with several inputs, but you change only one input at a time and treat the others as constants. For example, for f(x, y) = x squared + y, the partial derivative with respect to x is 2x, and with respect to y it is 1. Practice with simple polynomials until these steps feel routine.",
+     "search_query": "partial derivatives introduction for beginners"
+    },
+    {
+     "prerequisite": "Functions of several variables",
+     "summary": "A function of several variables takes more than one input and gives one output. For example, f(x, y) = x + y takes two numbers and returns their sum. You can think of the inputs as coordinates, and the output as a height or a value at that point. In machine learning, a model often has many inputs and many weights, so this idea is used all the time. Try evaluating a two-variable function at a few points to build intuition.",
+     "search_query": "functions of several variables explained simply"
+    },
+    {
+     "prerequisite": "Vectors and vector operations",
+     "summary": "A vector is an ordered list of numbers, such as (1, 2) or (3, 4, 5). You can add two vectors by adding their matching components. You can multiply a vector by a number, which scales every component. The dot product multiplies matching components and adds the results, giving one number. In machine learning, the weights of a model and the features of a data point are often stored as vectors.",
+     "search_query": "vectors and dot product for beginners"
+    },
+    {
+     "prerequisite": "Loss functions (for example, mean squared error)",
+     "summary": "A loss function measures how wrong a model's predictions are compared with the true values. A small loss means the predictions are close to the targets. Mean squared error is a common loss: for each example, take the difference between prediction and true value, square it, and then average all these squared differences. Training a model means changing its parameters to make the loss smaller. Try computing the loss for two or three simple predictions by hand.",
+     "search_query": "mean squared error loss function explained"
+    }
+   ]
+  }
+ }
+}

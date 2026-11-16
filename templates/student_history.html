@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}My lessons | Lesson Ready{% endblock %}
+{% block layout %}narrow{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div><span class="eyebrow">Student</span><h1>My lessons</h1><p class="lead">Signed in on this device as <b>{{ session.name }}</b>.</p></div>
+  <a class="button lime" href="{{ url_for('student_join') }}">{{ icon('plus') }} Join a lesson</a>
+</div>
+{% if rows %}
+<ul class="lesson-list">
+  {% for r in rows %}{% set l = r.lesson %}
+  <li class="lesson-item" style="cursor:default">
+    <div class="spread">
+      <div class="stack-sm" style="gap:4px">
+        <h3 lang="{{ lang_code(l) }}"><a href="{{ url_for('student_lesson', code=l.code) }}" style="color:inherit">{{ l.topic }}</a></h3>
+        <div class="lesson-meta">{% if l.course %}<span lang="{{ lang_code(l) }}">{{ l.course }}</span>{% endif %}<span>Joined {{ l.joined|when('%d %b') }}</span>
+          {% if l.note_published and l.class_note %}<span class="pill draft">{{ icon('message') }} Message from teacher</span>{% endif %}</div>
+      </div>
+      <a class="button ghost small" href="{{ url_for('student_lesson', code=l.code) }}">Open {{ icon('arrow') }}</a>
+    </div>
+    <div class="lesson-phases">
+      {% for kind, title in [('pre', 'Readiness quiz'), ('post', 'Learning check')] %}
+      <div class="phase">
+        <div class="spread"><b>{{ title }}</b>
+        {% set a = r.attempts.get(kind) %}
+        {% if a %}<a class="pill good" href="{{ url_for('student_result', quiz_id=a.quiz_id) }}">{{ a.score }}/{{ a.total }} · results</a>
+        {% elif kind in r.quizzes and r.quizzes[kind].status == 'open' %}<a class="pill open" href="{{ url_for('student_quiz', quiz_id=r.quizzes[kind].id) }}">Open now · start</a>
+        {% elif kind in r.quizzes %}<span class="pill closed">Closed</span>
+        {% else %}<span class="pill closed">Not yet</span>{% endif %}</div>
+      </div>
+      {% endfor %}
+    </div>
+  </li>
+  {% endfor %}
+</ul>
+{% else %}
+<div class="empty">You haven’t joined a lesson on this device yet.</div>
+{% endif %}
+{% endblock %}

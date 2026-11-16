@@ -1,0 +1,20 @@
+{% if progress %}
+{% set avg_pre = ((progress|sum(attribute='pre')) / progress|length)|round|int %}
+{% set avg_post = ((progress|sum(attribute='post')) / progress|length)|round|int %}
+{% set ns = namespace(n=0) %}{% for p in progress %}{% if p.post > p.pre %}{% set ns.n = ns.n + 1 %}{% endif %}{% endfor %}
+<p class="summary-line"><b>{{ progress|length }}</b> students took both quizzes · average <b>{{ avg_pre }}% → {{ avg_post }}%</b> · <b>{{ ns.n }}</b> scored higher after class</p>
+<details class="disclosure" data-key="progress-table"><summary>Change per student</summary><div class="table-wrap">
+  <table>
+    <thead><tr><th scope="col">Student</th><th scope="col" class="num">Before</th><th scope="col" class="num">After</th><th scope="col" class="num">Change</th></tr></thead>
+    <tbody>
+    {% for p in progress %}
+      <tr><th scope="row">{{ p.name }}</th><td class="num">{{ p.pre }}%</td><td class="num">{{ p.post }}%</td>
+          <td class="num {{ 'up' if p.post > p.pre else ('down' if p.post < p.pre else '') }}">{{ '%+d' % (p.post - p.pre) }}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div></details>
+<p class="hint">The two quizzes test different content, so this is a rough signal, not a measured learning gain.</p>
+{% else %}
+<p class="blank-line">Appears when students have taken both quizzes.</p>
+{% endif %}

@@ -1,39 +1,39 @@
 {% extends "base.html" %}
-{% block title %}Check the prerequisites | Lesson Ready{% endblock %}
-{% block layout %}reading-shell{% endblock %}
+{% block title %}Choose prerequisites | Lesson Ready{% endblock %}
+{% block layout %}narrow{% endblock %}
 {% block content %}
-<a class="back-link" href="{{ url_for('teacher_lesson', lesson_id=lesson.id) }}">← Lesson overview</a>
-<div class="page-heading">
-  <p class="context">{{ lesson.topic }}</p>
-  <h1>Check the prerequisites</h1>
-  <p>Choose what students should already know. You can remove AI suggestions and add your own topics.</p>
-</div>
+<a class="back-link" href="{{ url_for('teacher_lesson', lesson_id=lesson.id) }}">{{ icon('back') }} Lesson overview</a>
+<div class="page-head"><div>
+  <span class="eyebrow">Step 1 of 2 · Readiness quiz</span>
+  <h1 lang="{{ lang_code(lesson) }}">{{ lesson.topic }}</h1>
+  <p class="lead">What must students already know to follow this lesson? Keep the AI suggestions you agree with and add your own.</p>
+</div></div>
 
 <form method="post" class="stack" data-ai>
   <section class="card form-stack" aria-labelledby="suggested-topics">
-    <h2 id="suggested-topics">Suggested topics</h2>
-    <div class="option-group">
+    <div class="spread"><h2 id="suggested-topics">Prerequisites</h2><span class="pill ai">{{ icon('sparkle') }} Suggested by AI</span></div>
+    <div class="choice-list" lang="{{ lang_code(lesson) }}">
       {% for p in prereqs %}
-      <label class="option">
+      <label class="choice-row">
         <input type="checkbox" name="prereq" value="{{ p.name }}" checked>
         <span><strong>{{ p.name }}</strong><small>{{ p.why_needed }}</small></span>
       </label>
       {% endfor %}
     </div>
-    <label>Add your own topics <span class="optional">Optional</span>
-      <textarea name="extra" rows="3" placeholder="One topic per line"></textarea>
+    <label>Add your own <span class="optional">One topic per line</span>
+      <textarea name="extra" rows="2" placeholder="e.g. Derivative of a product"></textarea>
     </label>
   </section>
 
   <section class="card form-stack" aria-labelledby="quiz-settings">
     <h2 id="quiz-settings">Quiz settings</h2>
     {% include "_quiz_settings.html" %}
-    <p class="hint">Basic covers recall, Medium covers application, and Advanced covers reasoning in new situations.</p>
   </section>
 
   <div class="actions">
-    <button type="submit">Create readiness quiz <span aria-hidden="true">→</span></button>
+    <button type="submit">{{ icon('sparkle') }} Draft quiz with AI</button>
+    <p class="ai-status" role="status"></p>
   </div>
-  <p class="hint ai-status" role="status"></p>
+  <p class="hint">The AI writes questions and study notes for the ticked topics. Next you review and edit every question. Students see nothing until you publish.</p>
 </form>
 {% endblock %}

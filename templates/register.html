@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}Create account | Lesson Ready{% endblock %}
+{% block layout %}tight{% endblock %}
+{% block content %}
+<div class="page-head"><div><span class="eyebrow">Teacher</span><h1>Create your account</h1><p class="lead">Free for teachers. Students never need an account.</p></div></div>
+<form method="post" class="card form-stack">
+  <label>Your name <input name="name" autocomplete="name" required placeholder="e.g. Aigerim Sadykova"></label>
+  <label>University email <input name="email" type="email" autocomplete="email" required></label>
+  <label>Password <span class="optional">At least 6 characters</span><input name="password" type="password" autocomplete="new-password" minlength="6" required></label>
+  <button type="submit" class="block">Create account {{ icon('arrow') }}</button>
+  <p class="hint">Already have one? <a href="{{ url_for('login') }}">Sign in</a></p>
+</form>
+{% endblock %}
